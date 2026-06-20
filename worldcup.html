@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Riviera Country Club — World Cup Center</title>
-<!------------------
+<!--
   WORLD CUP CENTER (Yodeck). Partidos de hoy + vivo: TheSportsDB. Tablas de los 12 grupos: ESPN.
   Todo gratis, sin clave y sin configuracion. Se actualiza solo.
 -->
@@ -175,51 +175,52 @@ function state(ev){
   return {k:'live',label:(ev.strProgress&&ev.strProgress!=='0')?("Live "+ev.strProgress+"'"):'Live'};
 }
 
-/* ===================== PARTIDOS DE HOY (rotan de 2 en 2) ===================== */
+/* ===================== PARTIDOS DE HOY (ESPN, rotan de 2 en 2) ===================== */
 let MATCHES=[], mPage=0, mTimer=null;
 const M_PER_PAGE=2, M_PAGE_MS=10000;
+const ESPN_SB='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 function addDays(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);
   return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'}).format(d);}
-function etDate(ev){
-  let ts=ev.strTimestamp||'';
-  if(ts){ ts=ts.replace(' ','T'); if(!/[zZ]|[+\-]\d\d:?\d\d$/.test(ts)) ts+='Z'; }
-  else if(ev.dateEvent && ev.strTime){ ts=ev.dateEvent+'T'+ev.strTime.slice(0,8)+'Z'; }
-  else return ev.dateEvent||'';
-  const d=new Date(ts); if(isNaN(d.getTime())) return ev.dateEvent||'';
-  return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(d);
+function espnDateET(ev){const d=new Date(ev.date||'');if(isNaN(d.getTime()))return '';
+  return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(d);}
+function espnTeam(comp,ha){const c=(comp.competitors||[]).find(x=>x.homeAway===ha)||{};
+  return {name:(c.team&&(c.team.displayName||c.team.shortDisplayName||c.team.name))||'',score:(c.score!=null?c.score:'')};}
+function espnState(comp){
+  const t=(comp.status&&comp.status.type)||{};
+  if(t.state==='post'||t.completed) return {k:'ft',label:'Full Time'};
+  if(t.state==='in'){ const cl=(comp.status&&comp.status.displayClock)||''; return {k:'live',label:(cl&&cl!=="0'")?('Live '+cl):'Live'}; }
+  const d=new Date(comp.date||''); const tm=isNaN(d.getTime())?'':new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}).format(d);
+  return {k:'ns',label:tm?('Kick-off '+tm):'Today'};
 }
 async function loadToday(){
   const today=todayISO();
-  const days=[addDays(today,-1),today,addDays(today,1)]; // cubre el dia completo en hora de Miami
-  const results=await Promise.all(days.map(dt=>
-    fetchT(`${SDB}/eventsday.php?d=${dt}&s=Soccer`,{},8000).then(r=>r.json()).catch(()=>null)));
-  const ok=results.some(d=>d!==null);
-  let all=[]; results.forEach(d=>{ if(d&&d.events) all=all.concat(d.events); });
-  const seen={};
-  const nm=all.filter(e=>{
-    if(!e||!e.idEvent||seen[e.idEvent]) return false; seen[e.idEvent]=1;
-    if(!(e.strLeague||'').toLowerCase().includes(WC_MATCH)) return false;
-    return etDate(e)===today; // solo los de HOY en Miami
-  }).sort((a,b)=>(a.strTimestamp||'').localeCompare(b.strTimestamp||''));
-  if(ok) MATCHES=nm; // si TODAS las llamadas fallan, conserva lo anterior
+  const a=addDays(today,-1).replace(/-/g,''), b=addDays(today,1).replace(/-/g,'');
+  let data=null;
+  try{ const r=await fetchT(`${ESPN_SB}?dates=${a}-${b}&limit=100`,{},9000); data=await r.json(); }catch(e){}
+  if(data && data.events){
+    const seen={};
+    MATCHES = data.events.filter(ev=>{ if(!ev||!ev.id||seen[ev.id])return false; seen[ev.id]=1; return espnDateET(ev)===today; })
+      .map(ev=>{ const comp=(ev.competitions&&ev.competitions[0])||{}; const h=espnTeam(comp,'home'),aw=espnTeam(comp,'away'); const v=comp.venue||{};
+        return {st:espnState(comp),home:h.name,away:aw.name,hs:h.score,as:aw.score,venue:[v.fullName,(v.address&&v.address.city)].filter(Boolean).join(' \u00b7 '),date:ev.date}; })
+      .sort((x,y)=>(x.date||'').localeCompare(y.date||''));
+  }
   const total=Math.ceil(Math.max(MATCHES.length,1)/M_PER_PAGE);
   if(mPage>=total) mPage=0;
   renderMatches(); startMatchPaging();
 }
 function renderMatches(){
   const row=document.getElementById('mRow'), ind=document.getElementById('mPage');
-  if(!MATCHES.length){ row.innerHTML='<div class="m-empty">No World Cup matches today — check the standings below.</div>'; ind.textContent=''; return; }
+  if(!MATCHES.length){ row.innerHTML='<div class="m-empty">No World Cup matches today \u2014 check the standings below.</div>'; ind.textContent=''; return; }
   const total=Math.ceil(MATCHES.length/M_PER_PAGE);
   const slice=MATCHES.slice(mPage*M_PER_PAGE,mPage*M_PER_PAGE+M_PER_PAGE);
   ind.textContent=total>1?`${mPage+1} / ${total}`:'';
-  row.innerHTML=slice.map(e=>{
-    const s=state(e);
-    const score=(e.intHomeScore!=null&&e.intHomeScore!==''&&e.intAwayScore!=null&&e.intAwayScore!=='')?`${e.intHomeScore} – ${e.intAwayScore}`:'vs';
-    const venue=[e.strVenue,e.strCity].filter(Boolean).join(' · ');
+  row.innerHTML=slice.map(m=>{
+    const s=m.st;
+    const score=(s.k!=='ns'&&m.hs!==''&&m.hs!=null&&m.as!==''&&m.as!=null)?`${m.hs} \u2013 ${m.as}`:'vs';
     return `<div class="m ${s.k==='live'?'live':''}">
       <div class="m-status ${s.k}">${esc(s.label)}</div>
-      <div class="m-teams"><span class="t h">${esc(e.strHomeTeam)}</span><span class="sc">${score}</span><span class="t a">${esc(e.strAwayTeam)}</span></div>
-      ${venue?`<div class="m-venue">${esc(venue)}</div>`:''}
+      <div class="m-teams"><span class="t h">${esc(m.home)}</span><span class="sc">${score}</span><span class="t a">${esc(m.away)}</span></div>
+      ${m.venue?`<div class="m-venue">${esc(m.venue)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -290,7 +291,7 @@ function startPaging(){
 }
 
 /* Cargas + refrescos */
-loadToday(); setInterval(loadToday,60*1000);
+loadToday(); setInterval(loadToday,45*1000);
 loadStandings(); setInterval(loadStandings,15*60*1000);
 setTimeout(()=>location.reload(),6*60*60*1000);
 </script>
