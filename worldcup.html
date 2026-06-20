@@ -175,15 +175,33 @@ function state(ev){
   return {k:'live',label:(ev.strProgress&&ev.strProgress!=='0')?("Live "+ev.strProgress+"'"):'Live'};
 }
 
-/* ===================== PARTIDOS DE HOY (rotan de 3 en 3) ===================== */
+/* ===================== PARTIDOS DE HOY (rotan de 2 en 2) ===================== */
 let MATCHES=[], mPage=0, mTimer=null;
-const M_PER_PAGE=3, M_PAGE_MS=10000;
+const M_PER_PAGE=2, M_PAGE_MS=10000;
+function addDays(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);
+  return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'}).format(d);}
+function etDate(ev){
+  let ts=ev.strTimestamp||'';
+  if(ts){ ts=ts.replace(' ','T'); if(!/[zZ]|[+\-]\d\d:?\d\d$/.test(ts)) ts+='Z'; }
+  else if(ev.dateEvent && ev.strTime){ ts=ev.dateEvent+'T'+ev.strTime.slice(0,8)+'Z'; }
+  else return ev.dateEvent||'';
+  const d=new Date(ts); if(isNaN(d.getTime())) return ev.dateEvent||'';
+  return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(d);
+}
 async function loadToday(){
-  try{
-    const r=await fetchT(`${SDB}/eventsday.php?d=${todayISO()}&s=Soccer`,{},8000);
-    const d=await r.json();
-    MATCHES=(d.events||[]).filter(e=>(e.strLeague||'').toLowerCase().includes(WC_MATCH));
-  }catch(e){ /* conserva lo anterior si falla */ }
+  const today=todayISO();
+  const days=[addDays(today,-1),today,addDays(today,1)]; // cubre el dia completo en hora de Miami
+  const results=await Promise.all(days.map(dt=>
+    fetchT(`${SDB}/eventsday.php?d=${dt}&s=Soccer`,{},8000).then(r=>r.json()).catch(()=>null)));
+  const ok=results.some(d=>d!==null);
+  let all=[]; results.forEach(d=>{ if(d&&d.events) all=all.concat(d.events); });
+  const seen={};
+  const nm=all.filter(e=>{
+    if(!e||!e.idEvent||seen[e.idEvent]) return false; seen[e.idEvent]=1;
+    if(!(e.strLeague||'').toLowerCase().includes(WC_MATCH)) return false;
+    return etDate(e)===today; // solo los de HOY en Miami
+  }).sort((a,b)=>(a.strTimestamp||'').localeCompare(b.strTimestamp||''));
+  if(ok) MATCHES=nm; // si TODAS las llamadas fallan, conserva lo anterior
   const total=Math.ceil(Math.max(MATCHES.length,1)/M_PER_PAGE);
   if(mPage>=total) mPage=0;
   renderMatches(); startMatchPaging();
@@ -230,7 +248,9 @@ async function fetchStandings(){
   if(!groups.length) return null;
   const out=groups.map(g=>({name:cleanGroup(g.name),
     rows:g.entries.map(e=>({team:(e.team&&(e.team.displayName||e.team.shortDisplayName||e.team.name))||'',
-      Pld:Math.round(statVal(e,'gamesPlayed')),GD:Math.round(statVal(e,'pointDifferential')),Pts:Math.round(statVal(e,'points'))}))}));
+      Pld:Math.round(statVal(e,'gamesPlayed')),GD:Math.round(statVal(e,'pointDifferential')),
+      GF:Math.round(statVal(e,'pointsFor')),Pts:Math.round(statVal(e,'points'))}))
+      .sort((a,b)=> b.Pts-a.Pts || b.GD-a.GD || b.GF-a.GF)})); // orden: puntos, dif. de gol, goles a favor
   cacheSet('wc_st',out); return out;
 }
 
@@ -270,7 +290,7 @@ function startPaging(){
 }
 
 /* Cargas + refrescos */
-loadToday(); setInterval(loadToday,30*1000);
+loadToday(); setInterval(loadToday,60*1000);
 loadStandings(); setInterval(loadStandings,15*60*1000);
 setTimeout(()=>location.reload(),6*60*60*1000);
 </script>
