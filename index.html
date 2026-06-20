@@ -166,7 +166,7 @@
     </main>
 
     <footer>
-      <div class="tk-tag">⚽ World Cup</div>
+      <div class="tk-tag">📰 News</div>
       <div class="tk-wrap"><div class="tk-track" id="ticker"><span>Loading…</span></div></div>
     </footer>
   </div>
@@ -175,8 +175,8 @@
 /* ===================== CONFIG ===================== */
 const LAT=25.7304, LON=-80.2860, TZ='America/New_York';
 /* (Las fuentes de noticias se configuran abajo, en NEWS_FEEDS.) */
-const SDB_KEY='3';                 // clave publica gratuita de TheSportsDB
-const WC_MATCH='world cup';        // filtro de liga
+const SDB_KEY='3'; // clave publica gratuita de TheSportsDB
+const WC_MATCH='world cup'; // filtro de liga
 
 /* ===================== RELOJ ===================== */
 function tick(){
@@ -222,55 +222,70 @@ async function loadWeather(){
 }
 loadWeather(); setInterval(loadWeather,10*60*1000);
 
-/* ===================== MARCADORES WORLD CUP ===================== */
+/* ===================== MARCADORES WORLD CUP (ESPN · solo hoy Miami · rota 2) ===================== */
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function todayISO(){const f=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date());return f;}
-function matchState(ev){
-  const st=(ev.strStatus||'').toString().toLowerCase();
-  const hs=ev.intHomeScore, as=ev.intAwayScore;
-  if(/(finished|ft|match finished|aet|pen)/.test(st)) return {k:'ft',label:'FT'};
-  if(/(not started|ns|^$)/.test(st) || (hs===null||hs===undefined)) {
-    // sin empezar: muestra hora
-    let t=ev.strTimeLocal||ev.strTime||'';
-    if(t){const hm=t.slice(0,5); return {k:'ns',label:hm};}
-    return {k:'ns',label:'—'};
-  }
-  return {k:'live',label:(ev.strProgress&&ev.strProgress!=='0')?ev.strProgress+"'":'LIVE'};
+function todayISO(){return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date());}
+function addDays(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+const ESPN_SB='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+function espnDateET(ev){try{return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date(ev.date));}catch(e){return '';}}
+function espnTeam(comp,side){const c=((comp.competitors)||[]).find(x=>x.homeAway===side)||{};const t=c.team||{};return {name:t.shortDisplayName||t.displayName||t.name||'',score:(c.score!=null?c.score:'')};}
+function espnState(comp){
+  const t=((comp.status||{}).type)||{}; const state=t.state;
+  if(state==='in'){ const c=(comp.status||{}).displayClock; return {k:'live',label:c||'LIVE'}; }
+  if(state==='post'||t.completed){ return {k:'ft',label:'FT'}; }
+  let hm='—'; try{ hm=new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}).format(new Date(comp.date)); }catch(e){}
+  return {k:'ns',label:hm};
 }
-async function loadScores(){
+let MATCHES=[], scPage=0, scTimer=null;
+const SC_PER_PAGE=2, SC_PAGE_MS=10000;
+function renderScores(){
   const el=document.getElementById('scList');
-  const url=`https://www.thesportsdb.com/api/v1/json/${SDB_KEY}/eventsday.php?d=${todayISO()}&s=Soccer`;
-  try{
-    const r=await fetch(url); const d=await r.json();
-    let evs=(d.events||[]).filter(e=>((e.strLeague||'').toLowerCase().includes(WC_MATCH)));
-    if(!evs.length){ el.innerHTML='<div class="sc-empty">No World Cup matches today.</div>'; return; }
-    evs=evs.slice(0,4);
-    el.innerHTML=evs.map(e=>{
-      const s=matchState(e);
-      const score=(e.intHomeScore!=null&&e.intAwayScore!=null)?`${e.intHomeScore} – ${e.intAwayScore}`:'vs';
-      return `<div class="sc-row">
-        <span class="h">${esc(e.strHomeTeam)}</span>
-        <span class="sc">${score}</span>
-        <span class="a">${esc(e.strAwayTeam)}</span>
-        <span class="st ${s.k}">${s.label}</span>
-      </div>`;
-    }).join('');
-  }catch(e){ el.innerHTML='<div class="sc-empty">Scores unavailable right now.</div>'; }
+  if(!MATCHES.length){ el.innerHTML='<div class="sc-empty">No World Cup matches today.</div>'; return; }
+  const total=Math.ceil(MATCHES.length/SC_PER_PAGE);
+  if(scPage>=total) scPage=0;
+  const page=MATCHES.slice(scPage*SC_PER_PAGE, scPage*SC_PER_PAGE+SC_PER_PAGE);
+  el.innerHTML=page.map(m=>{
+    const score=(m.k==='ns')?'vs':`${m.hs} \u2013 ${m.as}`;
+    return `<div class="sc-row">
+      <span class="h">${esc(m.home)}</span>
+      <span class="sc">${score}</span>
+      <span class="a">${esc(m.away)}</span>
+      <span class="st ${m.k}">${esc(m.label)}</span>
+    </div>`;
+  }).join('');
 }
-loadScores(); setInterval(loadScores,3*60*1000);   // refresca cada 3 min
+function startScPaging(){ if(scTimer)clearInterval(scTimer); if(MATCHES.length>SC_PER_PAGE){ scTimer=setInterval(()=>{ scPage++; renderScores(); }, SC_PAGE_MS); } }
+async function loadScores(){
+  const today=todayISO();
+  const days=[addDays(today,-1),today,addDays(today,1)].map(d=>d.replace(/-/g,''));
+  const results=await Promise.all(days.map(d=>
+    fetch(`${ESPN_SB}?dates=${d}&limit=100&_=${Date.now()}`).then(r=>r.json()).catch(()=>null)));
+  const ok=results.some(d=>d!==null);
+  let all=[]; results.forEach(d=>{ if(d&&d.events) all=all.concat(d.events); });
+  if(ok){
+    const seen={};
+    MATCHES = all.filter(ev=>{ if(!ev||!ev.id||seen[ev.id])return false; seen[ev.id]=1; return espnDateET(ev)===today; })
+      .map(ev=>{ const comp=(ev.competitions&&ev.competitions[0])||{}; const h=espnTeam(comp,'home'),aw=espnTeam(comp,'away'); const s=espnState(comp);
+        return {home:h.name,away:aw.name,hs:h.score,as:aw.score,k:s.k,label:s.label,date:ev.date}; })
+      .sort((x,y)=>(x.date||'').localeCompare(y.date||''));
+  }
+  try{ console.log('[Dashboard/ESPN] hoy '+today+' -> '+MATCHES.length+' partido(s)'); }catch(e){}
+  if(scPage>=Math.ceil(Math.max(MATCHES.length,1)/SC_PER_PAGE)) scPage=0;
+  renderScores(); startScPaging();
+}
+loadScores(); setInterval(loadScores,60000); // refresca cada 60s
 
 /* ===================== NOTICIAS CON RESUMEN ===================== */
 /* Fuentes de noticias (se prueban en orden). Para ESPAÑOL, descomenta la linea es-419 y ponla primera. */
 const NEWS_FEEDS=[
-  {label:'World Cup',    url:'https://www.espn.com/espn/rss/soccer/news'},
-  {label:'Golf',         url:'https://www.espn.com/espn/rss/golf/news'},
-  {label:'Sports',       url:'https://www.espn.com/espn/rss/news'},
+  {label:'Golf', url:'https://www.espn.com/espn/rss/golf/news'},
+  {label:'Sports', url:'https://www.espn.com/espn/rss/news'},
   {label:'Coral Gables', url:'https://news.google.com/rss/search?q=%22Coral+Gables%22&hl=en-US&gl=US&ceid=US:en'},
-  {label:'Miami',        url:'https://news.google.com/rss/search?q=Miami+Florida&hl=en-US&gl=US&ceid=US:en'}
-  // ESPANOL (opcional): {label:'Copa Mundial', url:'https://news.google.com/rss/search?q=Copa+Mundial+2026&hl=es-419&gl=US&ceid=US:es'}
+  {label:'Miami', url:'https://news.google.com/rss/search?q=Miami+Florida&hl=en-US&gl=US&ceid=US:en'}
+  // ESPANOL (opcional): {label:'Noticias', url:'https://news.google.com/rss/search?q=Miami+OR+%22Coral+Gables%22&hl=es-419&gl=US&ceid=US:es'}
 ];
-const ROTATE_MS=9000;     // la tarjeta de noticia cambia cada 9s (independiente del ticker)
-const TICKER_PXPS=80;     // velocidad del ticker en px/seg (mas bajo = mas lento)
+const ROTATE_MS=9000; // la tarjeta de noticia cambia cada 9s (independiente del ticker)
+const TICKER_PXPS=80; // velocidad del ticker en px/seg (mas bajo = mas lento)
 
 function stripHTML(s){const d=document.createElement('div');d.innerHTML=s||'';let t=d.textContent||'';return t.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();}
 function cleanSum(s,title){s=stripHTML(s);if(!s)return '';if(title&&s.slice(0,30).toLowerCase()===title.slice(0,30).toLowerCase())s=s.slice(title.length).trim();return s.length>200?s.slice(0,197).trim()+'\u2026':s;}
@@ -297,13 +312,13 @@ async function tryFeed(feed){
 async function fetchFeed(f){ const it=await tryFeed(f.url); return (it||[]).slice(0,6).map(x=>({title:x.title,sum:x.sum,src:f.label})); }
 async function fetchNews(){
   const lists=await Promise.all(NEWS_FEEDS.map(f=>fetchFeed(f).catch(()=>[])));
-  const merged=[]; for(let r=0;r<6;r++){for(const l of lists){if(l[r])merged.push(l[r]);}}  // intercala por tema
+  const merged=[]; for(let r=0;r<6;r++){for(const l of lists){if(l[r])merged.push(l[r]);}} // intercala por tema
   return merged.length?merged:null;
 }
 
 const FALLBACK=[
-  {title:'FIFA World Cup 2026 \u2014 hosted across the USA, Canada and M\u00e9xico',sum:'48 teams compete in the largest World Cup in history. Watch the matches live here at the club.',src:'World Cup'},
-  {title:'Welcome to Riviera Country Club',sum:'Coral Gables \u00b7 Established 1945 \u00b7 A one-of-a-kind family club.',src:'Riviera Country Club'}
+  {title:'Welcome to Riviera Country Club',sum:'Coral Gables \u00b7 Established 1945 \u00b7 A one-of-a-kind family club.',src:'Riviera Country Club'},
+  {title:'Latest headlines refresh throughout the day',sum:'Local and sports news from around Miami and Coral Gables.',src:'News'}
 ];
 let news=FALLBACK.slice(), ni=0, rotTimer=null;
 function renderNews(){
@@ -322,7 +337,7 @@ async function loadNews(){
   news=(items&&items.length)?items:FALLBACK.slice();
   const tk=document.getElementById('ticker');
   tk.innerHTML=news.map(h=>`<span>${esc((h.src||'').toUpperCase())} \u2014 ${esc(h.title)}</span>`).join('<span class="sep">\u25c6</span>');
-  const w=tk.scrollWidth||3000; tk.style.animationDuration=Math.max(45,Math.round(w/TICKER_PXPS))+'s';   // ticker mas lento
+  const w=tk.scrollWidth||3000; tk.style.animationDuration=Math.max(45,Math.round(w/TICKER_PXPS))+'s'; // ticker mas lento
   ni=0; renderNews(); startRotation();
 }
 loadNews(); setInterval(loadNews,10*60*1000);
