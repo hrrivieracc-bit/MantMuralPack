@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Riviera Country Club — Since 1945</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#13315C;--navy-2:#1C3E6E;--navy-deep:#0E2547;--gold:#C7A23C;--gold-deep:#B68F2E;--gold-soft:#E2C880;
+--card:#FFFFFF;--card-bd:#E5E1D6;--ink:#212934;--muted:#6E7682;--cream:#F3EFE5;--cream-dim:#C3CCDA;
+--serif:'Source Serif 4',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:var(--sans);color:var(--cream);font-size:1.05vw;background:var(--navy);-webkit-font-smoothing:antialiased;
+background-image:radial-gradient(120% 90% at 85% -10%,#1a4079 0%,rgba(26,64,121,0) 55%),radial-gradient(150% 120% at -10% 120%,#102d57 0%,rgba(16,45,87,0) 50%);}
+.stage{width:100vw;height:100vh;display:grid;grid-template-rows:20vh 1fr 7vh;position:relative;}
+.stage::before{content:"";position:absolute;inset:1.4vh 1.4vw;border:1px solid rgba(199,162,60,.30);pointer-events:none;}
+header{padding:0 4vw;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;}
+header::after{content:"";position:absolute;left:18vw;right:18vw;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(199,162,60,.6),transparent);}
+.eyebrow{font-size:1vw;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+.title{font-family:var(--serif);font-weight:700;font-size:4.2vw;line-height:1;margin-top:.5vh;color:var(--cream);}
+.tagline{font-family:var(--serif);font-style:italic;font-size:1.7vw;color:var(--gold-soft);margin-top:.8vh;}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1.8vw;padding:0 4vw;align-items:center;}
+.stat{text-align:center;padding:2vh 1vw;border-right:1px solid rgba(199,162,60,.22);}
+.stat:last-child{border-right:none;}
+.stat .n{font-family:var(--serif);font-weight:700;font-size:4.6vw;line-height:.9;color:var(--gold-soft);}
+.stat .l{font-size:1.0vw;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim);margin-top:1.2vh;line-height:1.4;font-weight:600;min-height:2.9vw;}
+footer{background:var(--navy-deep);border-top:1px solid rgba(199,162,60,.25);display:flex;align-items:center;justify-content:center;gap:1.2vw;}
+footer .ftxt{font-size:1.05vw;letter-spacing:.12em;text-transform:uppercase;color:var(--cream-dim);font-weight:600;}
+footer .ftxt b{color:var(--gold-soft);}footer .dot{color:var(--gold);}
+</style></head><body>
+<div class="stage">
+<header>
+<div class="eyebrow">Since 1945</div>
+<div class="title">Riviera Country Club</div>
+<div class="tagline">A one-of-a-kind family club in Coral Gables.</div>
+</header>
+<div class="stats">
+<div class="stat"><div class="n">1945</div><div class="l">Established</div></div>
+<div class="stat"><div class="n">113</div><div class="l">Acres in Coral Gables</div></div>
+<div class="stat"><div class="n">18</div><div class="l">Holes · Donald Ross design</div></div>
+<div class="stat"><div class="n">8</div><div class="l">Clay Tennis Courts</div></div>
+<div class="stat"><div class="n">60k</div><div class="l">Sq Ft Clubhouse</div></div>
+</div>
+<footer>
+<span class="ftxt">Golf <span class="dot">·</span> Tennis <span class="dot">·</span> Pools <span class="dot">·</span> Fitness <span class="dot">·</span> Dining <span class="dot">·</span> <b>Fabulous Fridays</b></span>
+</footer>
+</div></body></html>

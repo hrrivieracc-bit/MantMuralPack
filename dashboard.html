@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Riviera Country Club — Dashboard</title>
+<!--
+  RIVIERA COUNTRY CLUB · DASHBOARD AUTOMATICO (Yodeck)
+  Se actualiza solo: clima (Open-Meteo), marcadores World Cup (TheSportsDB, gratis)
+  y noticias con resumen (RSS). En Yodeck: Media -> Web Page (URL publica).
+  Ajuste opcional: NEWS_FEED mas abajo (idioma/tema de noticias).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#13315C; --navy-deep:#0E2547; --navy-line:#1C3E6E;
+    --gold:#C7A23C; --gold-soft:#E2C880; --maroon:#7E2A34;
+    --ivory:#F3EFE5; --ivory-dim:#C3CCDA; --green:#2E7D5B;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--navy);}
+  body{font-family:var(--sans);color:var(--ivory);font-size:1.05vw;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 90% at 80% -10%,#1a4079 0,rgba(26,64,121,0) 55%),
+      radial-gradient(140% 120% at -10% 120%,#102d57 0,rgba(16,45,87,0) 50%),var(--navy);}
+  .stage{width:100vw;height:100vh;display:grid;grid-template-rows:15vh 1fr 9vh;position:relative;}
+  .stage::before{content:"";position:absolute;inset:1.4vh 1.4vw;border:1px solid rgba(199,162,60,.28);pointer-events:none;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:0 4vw;position:relative;}
+  header::after{content:"";position:absolute;left:4vw;right:4vw;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(199,162,60,.6) 12%,rgba(199,162,60,.6) 88%,transparent);}
+  .brand{display:flex;align-items:center;gap:1.6vw;}
+  .crest{height:10vh;width:auto;filter:drop-shadow(0 .3vh .6vh rgba(0,0,0,.45));}
+  .crest-fb{height:10vh;width:7.5vh;border:1.5px solid var(--gold);border-radius:0 0 50% 50%/0 0 22% 22%;
+    display:none;align-items:center;justify-content:center;color:var(--gold);font-family:var(--serif);font-weight:700;font-size:2.8vh;}
+  .name{font-family:var(--serif);font-weight:600;font-size:3.3vw;line-height:.95;}
+  .name b{color:var(--gold-soft);font-weight:600;}
+  .loc{margin-top:.5vh;font-size:.9vw;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);font-weight:600;}
+  .clock{text-align:right;}
+  .clock .time{font-family:var(--serif);font-weight:500;font-size:4.2vw;line-height:.9;}
+  .clock .time .ampm{font-size:1.4vw;color:var(--gold);margin-left:.4vw;}
+  .clock .date{margin-top:.4vh;font-size:1vw;letter-spacing:.26em;text-transform:uppercase;color:var(--ivory-dim);}
+
+  main{display:grid;grid-template-columns:1.1fr 1fr;gap:2.8vw;padding:3.5vh 4vw 2.5vh;min-height:0;}
+  .panel-label{font-size:.9vw;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:700;display:flex;align-items:center;gap:1vw;}
+  .panel-label::after{content:"";flex:1;height:1px;background:var(--navy-line);}
+
+  /* Weather */
+  .weather{display:flex;flex-direction:column;min-height:0;}
+  .wx-now{display:flex;align-items:center;gap:2.2vw;margin-top:2.2vh;}
+  .wx-icon{width:12vh;height:12vh;flex:none;}
+  .wx-temp{font-family:var(--serif);font-weight:600;font-size:8.5vw;line-height:.82;}
+  .wx-temp .deg{color:var(--gold);}
+  .wx-cond .desc{font-size:1.4vw;font-weight:600;}
+  .wx-cond .feels{font-size:1vw;color:var(--ivory-dim);margin-top:.5vh;}
+  .wx-stats{display:flex;gap:2.4vw;margin-top:2.8vh;}
+  .wx-stat .k{font-size:.78vw;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600;}
+  .wx-stat .v{font-size:1.6vw;font-weight:600;margin-top:.3vh;font-family:var(--serif);}
+  .wx-fc{margin-top:auto;display:flex;gap:1.1vw;padding-top:2.8vh;}
+  .fc-cell{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--navy-line);border-radius:.5vw;padding:1.3vh 1vw;text-align:center;}
+  .fc-cell .fc-t{font-size:.82vw;letter-spacing:.14em;text-transform:uppercase;color:var(--ivory-dim);font-weight:600;}
+  .fc-cell .fc-i{width:4.8vh;height:4.8vh;margin:.8vh auto .6vh;}
+  .fc-cell .fc-d{font-size:1.4vw;font-weight:600;font-family:var(--serif);}
+
+  /* Right column: scores (top) + news (bottom) */
+  .rcol{display:flex;flex-direction:column;min-height:0;gap:2.4vh;}
+  .scores{display:flex;flex-direction:column;min-height:0;}
+  .sc-head{display:flex;align-items:center;justify-content:space-between;}
+  .sc-flag{display:flex;align-items:center;gap:.6vw;font-size:.78vw;letter-spacing:.18em;text-transform:uppercase;color:var(--ivory-dim);font-weight:600;}
+  .sc-flag .dot{width:.6vw;height:.6vw;border-radius:50%;}
+  .sc-list{margin-top:1.4vh;display:flex;flex-direction:column;gap:.5vh;overflow:hidden;}
+  .sc-row{display:grid;grid-template-columns:1fr auto 1fr 4.6vw;align-items:center;gap:1vw;
+    background:rgba(255,255,255,.035);border:1px solid var(--navy-line);border-radius:.45vw;padding:.85vh 1.2vw;}
+  .sc-row .h{font-size:1.12vw;font-weight:600;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sc-row .a{font-size:1.12vw;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sc-row .sc{font-family:var(--serif);font-weight:700;font-size:1.6vw;color:var(--gold-soft);white-space:nowrap;}
+  .sc-row .st{font-size:.78vw;font-weight:700;letter-spacing:.06em;text-align:center;text-transform:uppercase;}
+  .st.live{color:#fff;background:var(--maroon);border-radius:1vw;padding:.3vh 0;}
+  .st.ft{color:var(--ivory-dim);}
+  .st.ns{color:var(--gold);}
+  .sc-empty{margin-top:1.4vh;font-size:1.1vw;color:var(--ivory-dim);font-style:italic;}
+
+  /* News card */
+  .news{flex:1;display:flex;flex-direction:column;min-height:0;}
+  .nw-card{margin-top:1.4vh;flex:1;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+    border:1px solid var(--navy-line);border-left:3px solid var(--gold);border-radius:.5vw;padding:2.4vh 1.8vw;
+    display:flex;flex-direction:column;justify-content:center;min-height:0;transition:opacity .5s;}
+  .nw-card.fade{opacity:0;}
+  .nw-src{font-size:.82vw;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .nw-hl{font-family:var(--serif);font-weight:600;font-size:1.9vw;line-height:1.12;margin-top:1vh;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .nw-sum{font-size:1.1vw;line-height:1.45;color:var(--ivory-dim);margin-top:1.1vh;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+  /* Ticker */
+  footer{background:var(--navy-deep);border-top:1px solid var(--navy-line);display:flex;align-items:center;overflow:hidden;}
+  .tk-tag{flex:none;align-self:stretch;display:flex;align-items:center;gap:.8vw;padding:0 1.8vw;background:var(--gold);color:var(--navy-deep);
+    font-weight:700;font-size:1vw;letter-spacing:.2em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,calc(100% - 1.6vh) 100%,0 100%);}
+  .tk-wrap{flex:1;overflow:hidden;white-space:nowrap;}
+  .tk-track{display:inline-block;white-space:nowrap;padding-left:100%;animation:ticker 60s linear infinite;}
+  .tk-track span{font-size:1.35vw;color:var(--ivory);font-weight:500;}
+  .tk-track .sep{color:var(--gold);margin:0 1.5vw;}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+  @media (prefers-reduced-motion:reduce){.tk-track{animation-duration:120s;}}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <div class="brand">
+        <img class="crest" src="https://www.rivieracc.com/images/shield.png" alt="Riviera Country Club"
+             onerror="this.style.display='none';document.getElementById('crestFb').style.display='flex';" />
+        <div id="crestFb" class="crest-fb">RCC</div>
+        <div>
+          <div class="name">Riviera <b>Country Club</b></div>
+          <div class="loc">Coral Gables · Florida</div>
+        </div>
+      </div>
+      <div class="clock">
+        <div class="time"><span id="tHour">--:--</span><span class="ampm" id="tAmPm">--</span></div>
+        <div class="date" id="tDate">———</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Weather -->
+      <section class="weather">
+        <div class="panel-label">Weather · Coral Gables</div>
+        <div class="wx-now">
+          <div class="wx-icon" id="wxIcon"></div>
+          <div class="wx-temp"><span id="wxTemp">--</span><span class="deg">°</span></div>
+          <div class="wx-cond"><div class="desc" id="wxDesc">Loading…</div><div class="feels" id="wxFeels">&nbsp;</div></div>
+        </div>
+        <div class="wx-stats">
+          <div class="wx-stat"><div class="k">High</div><div class="v" id="wxHi">--°</div></div>
+          <div class="wx-stat"><div class="k">Low</div><div class="v" id="wxLo">--°</div></div>
+          <div class="wx-stat"><div class="k">Humidity</div><div class="v" id="wxHum">--%</div></div>
+          <div class="wx-stat"><div class="k">Wind</div><div class="v" id="wxWind">-- mph</div></div>
+        </div>
+        <div class="wx-fc" id="wxForecast"></div>
+      </section>
+
+      <!-- Scores + News -->
+      <section class="rcol">
+        <div class="scores">
+          <div class="sc-head">
+            <div class="panel-label" style="flex:1">World Cup · Today</div>
+          </div>
+          <div class="sc-flag" style="margin-top:1vh">
+            <span class="dot" style="background:#3C3B6E"></span><span class="dot" style="background:#D52B1E"></span><span class="dot" style="background:#006847"></span>
+            USA · Canada · México 2026
+          </div>
+          <div class="sc-list" id="scList"><div class="sc-empty">Loading matches…</div></div>
+        </div>
+        <div class="news">
+          <div class="panel-label">Latest</div>
+          <div class="nw-card" id="nwCard">
+            <div class="nw-src" id="nwSrc">&nbsp;</div>
+            <div class="nw-hl" id="nwHl">Loading the latest news…</div>
+            <div class="nw-sum" id="nwSum">&nbsp;</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="tk-tag">⚽ World Cup</div>
+      <div class="tk-wrap"><div class="tk-track" id="ticker"><span>Loading…</span></div></div>
+    </footer>
+  </div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const LAT=25.7304, LON=-80.2860, TZ='America/New_York';
+/* (Las fuentes de noticias se configuran abajo, en NEWS_FEEDS.) */
+const SDB_KEY='3';                 // clave publica gratuita de TheSportsDB
+const WC_MATCH='world cup';        // filtro de liga
+
+/* ===================== RELOJ ===================== */
+function tick(){
+  const now=new Date();
+  const p=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}).formatToParts(now);
+  let hm='',ap=''; for(const x of p){ if(['hour','minute','literal'].includes(x.type)) hm+=x.value; if(x.type==='dayPeriod') ap=x.value; }
+  document.getElementById('tHour').textContent=hm.trim();
+  document.getElementById('tAmPm').textContent=ap;
+  document.getElementById('tDate').textContent=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:TZ}).format(now);
+}
+tick(); setInterval(tick,15000);
+
+/* ===================== ICONOS CLIMA ===================== */
+function wxGroup(c){if(c===0)return'sun';if(c===1||c===2)return'partly';if(c===3||c===45||c===48)return'cloud';
+  if((c>=51&&c<=67)||(c>=80&&c<=82))return'rain';if(c>=71&&c<=77)return'cloud';if(c>=95)return'storm';return'cloud';}
+function wxLabel(c){const m={0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Snow',73:'Snow',75:'Snow',77:'Snow',80:'Rain showers',81:'Rain showers',82:'Heavy showers',85:'Snow',86:'Snow',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};return m[c]||'—';}
+function wxSVG(g,s){const sun=`<circle cx="22" cy="22" r="9" fill="#E2C880"/>`+[...Array(8)].map((_,i)=>{const a=i*Math.PI/4;return `<line x1="${(22+Math.cos(a)*15).toFixed(1)}" y1="${(22+Math.sin(a)*15).toFixed(1)}" x2="${(22+Math.cos(a)*19).toFixed(1)}" y2="${(22+Math.sin(a)*19).toFixed(1)}" stroke="#E2C880" stroke-width="2" stroke-linecap="round"/>`}).join('');
+  const cloud=`<path d="M14 30 a8 8 0 0 1 1-15 a11 11 0 0 1 21 3 a7 7 0 0 1 -1 12 z" fill="#cfd8e6"/>`;
+  const sh={sun:`<svg viewBox="0 0 44 44" width="${s}" height="${s}">${sun}</svg>`,
+    partly:`<svg viewBox="0 0 44 44" width="${s}" height="${s}"><circle cx="16" cy="15" r="7" fill="#E2C880"/>${cloud}</svg>`,
+    cloud:`<svg viewBox="0 0 44 44" width="${s}" height="${s}">${cloud}</svg>`,
+    rain:`<svg viewBox="0 0 44 44" width="${s}" height="${s}">${cloud}<g stroke="#E2C880" stroke-width="2" stroke-linecap="round"><line x1="16" y1="34" x2="14" y2="39"/><line x1="23" y1="34" x2="21" y2="39"/><line x1="30" y1="34" x2="28" y2="39"/></g></svg>`,
+    storm:`<svg viewBox="0 0 44 44" width="${s}" height="${s}">${cloud}<path d="M22 32 l-4 6 h4 l-3 6" stroke="#E2C880" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`};
+  return sh[g]||sh.cloud;}
+
+/* ===================== CLIMA ===================== */
+async function loadWeather(){
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(TZ)}&forecast_days=1`;
+  try{const r=await fetch(url),d=await r.json(),c=d.current;
+    document.getElementById('wxTemp').textContent=Math.round(c.temperature_2m);
+    document.getElementById('wxDesc').textContent=wxLabel(c.weather_code);
+    document.getElementById('wxFeels').textContent='Feels like '+Math.round(c.apparent_temperature)+'°';
+    document.getElementById('wxHum').textContent=Math.round(c.relative_humidity_2m)+'%';
+    document.getElementById('wxWind').textContent=Math.round(c.wind_speed_10m)+' mph';
+    document.getElementById('wxHi').textContent=Math.round(d.daily.temperature_2m_max[0])+'°';
+    document.getElementById('wxLo').textContent=Math.round(d.daily.temperature_2m_min[0])+'°';
+    document.getElementById('wxIcon').innerHTML=wxSVG(wxGroup(c.weather_code),'100%');
+    const T=d.hourly.time,P=d.hourly.temperature_2m,C=d.hourly.weather_code; let i=T.findIndex(t=>new Date(t)>new Date()); if(i<0)i=0;
+    let cells=''; for(let k=0;k<3;k++){const j=Math.min(i+1+k*2,T.length-1);const hr=new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:true,timeZone:TZ}).format(new Date(T[j]));
+      cells+=`<div class="fc-cell"><div class="fc-t">${hr}</div><div class="fc-i">${wxSVG(wxGroup(C[j]),'100%')}</div><div class="fc-d">${Math.round(P[j])}°</div></div>`;}
+    document.getElementById('wxForecast').innerHTML=cells;
+  }catch(e){document.getElementById('wxDesc').textContent='Weather unavailable';document.getElementById('wxIcon').innerHTML=wxSVG('cloud','100%');}
+}
+loadWeather(); setInterval(loadWeather,10*60*1000);
+
+/* ===================== MARCADORES WORLD CUP ===================== */
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function todayISO(){const f=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date());return f;}
+function matchState(ev){
+  const st=(ev.strStatus||'').toString().toLowerCase();
+  const hs=ev.intHomeScore, as=ev.intAwayScore;
+  if(/(finished|ft|match finished|aet|pen)/.test(st)) return {k:'ft',label:'FT'};
+  if(/(not started|ns|^$)/.test(st) || (hs===null||hs===undefined)) {
+    // sin empezar: muestra hora
+    let t=ev.strTimeLocal||ev.strTime||'';
+    if(t){const hm=t.slice(0,5); return {k:'ns',label:hm};}
+    return {k:'ns',label:'—'};
+  }
+  return {k:'live',label:(ev.strProgress&&ev.strProgress!=='0')?ev.strProgress+"'":'LIVE'};
+}
+async function loadScores(){
+  const el=document.getElementById('scList');
+  const url=`https://www.thesportsdb.com/api/v1/json/${SDB_KEY}/eventsday.php?d=${todayISO()}&s=Soccer`;
+  try{
+    const r=await fetch(url); const d=await r.json();
+    let evs=(d.events||[]).filter(e=>((e.strLeague||'').toLowerCase().includes(WC_MATCH)));
+    if(!evs.length){ el.innerHTML='<div class="sc-empty">No World Cup matches today.</div>'; return; }
+    evs=evs.slice(0,4);
+    el.innerHTML=evs.map(e=>{
+      const s=matchState(e);
+      const score=(e.intHomeScore!=null&&e.intAwayScore!=null)?`${e.intHomeScore} – ${e.intAwayScore}`:'vs';
+      return `<div class="sc-row">
+        <span class="h">${esc(e.strHomeTeam)}</span>
+        <span class="sc">${score}</span>
+        <span class="a">${esc(e.strAwayTeam)}</span>
+        <span class="st ${s.k}">${s.label}</span>
+      </div>`;
+    }).join('');
+  }catch(e){ el.innerHTML='<div class="sc-empty">Scores unavailable right now.</div>'; }
+}
+loadScores(); setInterval(loadScores,3*60*1000);   // refresca cada 3 min
+
+/* ===================== NOTICIAS CON RESUMEN ===================== */
+/* Fuentes de noticias (se prueban en orden). Para ESPAÑOL, descomenta la linea es-419 y ponla primera. */
+const NEWS_FEEDS=[
+  {label:'World Cup',    url:'https://www.espn.com/espn/rss/soccer/news'},
+  {label:'Golf',         url:'https://www.espn.com/espn/rss/golf/news'},
+  {label:'Sports',       url:'https://www.espn.com/espn/rss/news'},
+  {label:'Coral Gables', url:'https://news.google.com/rss/search?q=%22Coral+Gables%22&hl=en-US&gl=US&ceid=US:en'},
+  {label:'Miami',        url:'https://news.google.com/rss/search?q=Miami+Florida&hl=en-US&gl=US&ceid=US:en'}
+  // ESPANOL (opcional): {label:'Copa Mundial', url:'https://news.google.com/rss/search?q=Copa+Mundial+2026&hl=es-419&gl=US&ceid=US:es'}
+];
+const ROTATE_MS=9000;     // la tarjeta de noticia cambia cada 9s (independiente del ticker)
+const TICKER_PXPS=80;     // velocidad del ticker en px/seg (mas bajo = mas lento)
+
+function stripHTML(s){const d=document.createElement('div');d.innerHTML=s||'';let t=d.textContent||'';return t.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();}
+function cleanSum(s,title){s=stripHTML(s);if(!s)return '';if(title&&s.slice(0,30).toLowerCase()===title.slice(0,30).toLowerCase())s=s.slice(title.length).trim();return s.length>200?s.slice(0,197).trim()+'\u2026':s;}
+async function viaRss2json(feed){
+  const r=await fetch('https://api.rss2json.com/v1/api.json?count=12&rss_url='+encodeURIComponent(feed));
+  const d=await r.json();
+  if(d.status==='ok'&&d.items&&d.items.length) return d.items.map(i=>{const t=stripHTML(i.title);return {title:t,sum:cleanSum(i.description||i.content,t)};});
+  return null;
+}
+async function viaXML(feed,proxy){
+  const r=await fetch(proxy+encodeURIComponent(feed));
+  let txt=await r.text();
+  if(txt.trim().charAt(0)==='{'){try{const jj=JSON.parse(txt);txt=jj.contents||txt;}catch(e){}}
+  const xml=new DOMParser().parseFromString(txt,'text/xml');
+  const items=[...xml.querySelectorAll('item')].slice(0,12).map(it=>{const t=stripHTML(it.querySelector('title')?.textContent);
+    return {title:t,sum:cleanSum(it.querySelector('description')?.textContent,t)};}).filter(x=>x.title);
+  return items.length?items:null;
+}
+async function tryFeed(feed){
+  const tries=[()=>viaRss2json(feed),()=>viaXML(feed,'https://api.allorigins.win/raw?url='),()=>viaXML(feed,'https://corsproxy.io/?url=')];
+  for(const fn of tries){try{const it=await fn();if(it&&it.length)return it;}catch(e){}}
+  return null;
+}
+async function fetchFeed(f){ const it=await tryFeed(f.url); return (it||[]).slice(0,6).map(x=>({title:x.title,sum:x.sum,src:f.label})); }
+async function fetchNews(){
+  const lists=await Promise.all(NEWS_FEEDS.map(f=>fetchFeed(f).catch(()=>[])));
+  const merged=[]; for(let r=0;r<6;r++){for(const l of lists){if(l[r])merged.push(l[r]);}}  // intercala por tema
+  return merged.length?merged:null;
+}
+
+const FALLBACK=[
+  {title:'FIFA World Cup 2026 \u2014 hosted across the USA, Canada and M\u00e9xico',sum:'48 teams compete in the largest World Cup in history. Watch the matches live here at the club.',src:'World Cup'},
+  {title:'Welcome to Riviera Country Club',sum:'Coral Gables \u00b7 Established 1945 \u00b7 A one-of-a-kind family club.',src:'Riviera Country Club'}
+];
+let news=FALLBACK.slice(), ni=0, rotTimer=null;
+function renderNews(){
+  const h=news[((ni%news.length)+news.length)%news.length], card=document.getElementById('nwCard');
+  card.classList.add('fade');
+  setTimeout(()=>{
+    document.getElementById('nwSrc').textContent=(h.src||'News').toUpperCase();
+    document.getElementById('nwHl').textContent=h.title;
+    document.getElementById('nwSum').textContent=h.sum||'';
+    card.classList.remove('fade');
+  },450);
+}
+function startRotation(){if(rotTimer)clearInterval(rotTimer);rotTimer=setInterval(()=>{ni++;renderNews();},ROTATE_MS);}
+async function loadNews(){
+  const items=await fetchNews();
+  news=(items&&items.length)?items:FALLBACK.slice();
+  const tk=document.getElementById('ticker');
+  tk.innerHTML=news.map(h=>`<span>${esc((h.src||'').toUpperCase())} \u2014 ${esc(h.title)}</span>`).join('<span class="sep">\u25c6</span>');
+  const w=tk.scrollWidth||3000; tk.style.animationDuration=Math.max(45,Math.round(w/TICKER_PXPS))+'s';   // ticker mas lento
+  ni=0; renderNews(); startRotation();
+}
+loadNews(); setInterval(loadNews,10*60*1000);
+
+/* Auto-reload cada 6 h (estabilidad 24/7) */
+setTimeout(()=>location.reload(),6*60*60*1000);
+</script>
+</body>
+</html>

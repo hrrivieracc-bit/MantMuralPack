@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Riviera Country Club — Dress Code</title>
+<!--
+  RIVIERA COUNTRY CLUB · SLIDE DE DRESS CODE
+  Diseño calcado del estilo "Safety First" del bulletin (fondo claro, tarjetas, barra granate).
+  Contenido verificado de rivieracc.com. Estable: normalmente no se edita.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#13315C; --navy-2:#1C3E6E; --gold:#C7A23C; --gold-deep:#B68F2E; --gold-soft:#E2C880;
+    --maroon:#7E2A34; --maroon-deep:#6A222B; --ok:#3F7D54;
+    --paper:#F3F1EA; --paper-2:#ECE9DF; --card:#FFFFFF; --card-bd:#E5E1D6;
+    --ink:#212934; --ink-soft:#3A434F; --muted:#6E7682;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;}
+  body{ font-family:var(--sans); color:var(--ink); font-size:1.05vw; background:var(--paper); -webkit-font-smoothing:antialiased; }
+  .stage{ width:100vw; height:100vh; display:grid; grid-template-rows:14vh 1fr 6vh; }
+
+  header{ display:flex; align-items:center; gap:1.4vw; padding:0 4vw; }
+  .ticon{ width:6vh; height:6vh; flex:none; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; box-shadow:0 .3vh .8vh rgba(124,80,20,.25); }
+  .ticon svg{ width:3.3vh; height:3.3vh; }
+  .htitle{ flex:1; }
+  .htitle .t{ font-family:var(--serif); font-weight:700; font-size:3.4vw; line-height:1; color:var(--ink); }
+  .pill{ background:var(--navy); color:var(--gold-soft); font-weight:700; font-size:.92vw; letter-spacing:.2em; text-transform:uppercase; padding:1.1vh 1.6vw; border-radius:3vw; white-space:nowrap; }
+
+  .body{ padding:2vh 4vw 1vh; display:flex; flex-direction:column; justify-content:center; gap:2.6vh; }
+  .zones{ display:grid; grid-template-columns:1fr 1fr; gap:2.4vw; }
+  .zcard{ background:var(--card); border:1px solid var(--card-bd); border-radius:.6vw; padding:2vh 1.8vw; box-shadow:0 .2vh .6vh rgba(20,40,70,.05); }
+  .zhead{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--card-bd); padding-bottom:1vh; margin-bottom:1.4vh; }
+  .zhead .z{ font-family:var(--serif); font-size:2vw; font-weight:700; color:var(--ink); }
+  .zhead .tag{ font-size:.82vw; letter-spacing:.22em; text-transform:uppercase; color:var(--gold-deep); font-weight:700; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.6vw; }
+  .col h4{ display:flex; align-items:center; gap:.6vw; font-size:.95vw; letter-spacing:.1em; text-transform:uppercase; font-weight:700; margin-bottom:.8vh; }
+  .col.yes h4{ color:var(--ok); } .col.no h4{ color:var(--maroon); }
+  .col h4 .mk{ font-size:1.2vw; }
+  .col ul{ list-style:none; }
+  .col li{ font-size:1.12vw; line-height:1.5; color:var(--ink-soft); padding-left:1.1vw; position:relative; }
+  .col li::before{ content:"·"; position:absolute; left:.1vw; color:var(--gold-deep); }
+  .col.no li{ color:var(--muted); }
+
+  .venues{ display:grid; grid-template-columns:repeat(3,1fr); gap:2vw; }
+  .venue{ background:var(--card); border:1px solid var(--card-bd); border-radius:.6vw; padding:1.5vh 1.4vw; display:flex; align-items:center; gap:1vw; box-shadow:0 .2vh .6vh rgba(20,40,70,.05); }
+  .vicon{ width:4.6vh; height:4.6vh; flex:none; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; }
+  .vicon svg{ width:2.5vh; height:2.5vh; }
+  .venue .vn{ font-size:.85vw; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-deep); font-weight:700; }
+  .venue .vt{ font-size:1.05vw; color:var(--ink-soft); margin-top:.3vh; line-height:1.35; }
+
+  .banner{ background:var(--maroon); color:#fff; border-radius:.5vw; padding:1.5vh 1.8vw; display:flex; align-items:center; gap:1.2vw; }
+  .banner .bi{ width:3.4vh; height:3.4vh; flex:none; }
+  .banner p{ font-size:1.1vw; line-height:1.4; }
+  .banner p b{ color:var(--gold-soft); font-weight:700; }
+
+  footer{ background:var(--paper-2); border-top:1px solid var(--card-bd); display:flex; align-items:center; gap:1vw; padding:0 4vw; }
+  footer .fc{ height:4vh; }
+  footer .fc-fb{ display:none; font-family:var(--serif); font-weight:700; color:var(--maroon); font-size:1.6vh; border:1px solid var(--gold); border-radius:.3vh; padding:.3vh .6vh; }
+  footer .ftxt{ font-size:.95vw; letter-spacing:.22em; text-transform:uppercase; color:var(--navy); font-weight:700; }
+  footer .ftxt span{ color:var(--gold-deep); }
+  footer .fright{ margin-left:auto; font-family:var(--serif); font-size:1.4vw; color:var(--navy); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <span class="ticon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 4l4 2 4-2 4 3-2.5 3V20H6.5V10L4 7z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 4a2 2 0 0 0 4 0" stroke="#fff" stroke-width="1.7"/></svg>
+      </span>
+      <div class="htitle"><div class="t">Dress Code</div></div>
+      <div class="pill">Members &amp; Guests</div>
+    </header>
+
+    <div class="body">
+      <div class="zones">
+        <section class="zcard">
+          <div class="zhead"><span class="z">Upper Clubhouse &amp; Veranda</span><span class="tag">More formal</span></div>
+          <div class="cols">
+            <div class="col yes"><h4><span class="mk">&#10003;</span> Permitted</h4>
+              <ul><li>Collared shirts</li><li>Jackets &amp; sport coats</li><li>Dress slacks</li><li>Club-appropriate jeans</li><li>Bermuda shorts</li><li>Golf &amp; tennis attire</li></ul></div>
+            <div class="col no"><h4><span class="mk">&#10007;</span> Not permitted</h4>
+              <ul><li>T-shirts &amp; graphic tees</li><li>Tank tops · hats</li><li>Hoodies with hood up</li><li>Ripped or baggy jeans</li><li>Denim shorts · swimwear</li><li>Flip-flops, slides, Crocs</li></ul></div>
+          </div>
+        </section>
+        <section class="zcard">
+          <div class="zhead"><span class="z">Lower Clubhouse &amp; Terrace</span><span class="tag">Casual</span></div>
+          <div class="cols">
+            <div class="col yes"><h4><span class="mk">&#10003;</span> Permitted</h4>
+              <ul><li>Casual attire · t-shirts</li><li>Bermuda shorts</li><li>Club-appropriate jeans</li><li>Golf, tennis &amp; workout attire</li><li>Flip-flops &amp; slides</li></ul></div>
+            <div class="col no"><h4><span class="mk">&#10007;</span> Not permitted</h4>
+              <ul><li>Bare midriffs · tube tops</li><li>Hoodies with hood up</li><li>Ripped or baggy jeans</li><li>Denim shorts</li><li>Swimwear without cover-up</li></ul></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="venues">
+        <div class="venue"><span class="vicon"><svg viewBox="0 0 24 24" fill="none"><path d="M7 21V4l10 3-10 3" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></span><div><div class="vn">Golf</div><div class="vt">Proper golf attire required.</div></div></div>
+        <div class="venue"><span class="vicon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#fff" stroke-width="1.8"/><path d="M5 8c4 1 10 1 14 0M5 16c4-1 10-1 14 0" stroke="#fff" stroke-width="1.5"/></svg></span><div><div class="vn">Tennis</div><div class="vt">Proper tennis attire required.</div></div></div>
+        <div class="venue"><span class="vicon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 16c2 0 2-1.5 4.5-1.5S10 16 12 16s2-1.5 4.5-1.5S19 16 21 16M3 20c2 0 2-1.5 4.5-1.5S10 20 12 20s2-1.5 4.5-1.5S19 20 21 20M8 14V6a2 2 0 1 1 4 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></span><div><div class="vn">Pool &amp; Fitness</div><div class="vt">Cover-ups in The Grille. Athletic shoes in the Fitness Center.</div></div></div>
+      </div>
+
+      <div class="banner">
+        <svg class="bi" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3z" stroke="#E2C880" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4M12 16.5v.5" stroke="#E2C880" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <p>After <b>5:30 PM</b>, shorts and golf/tennis attire are not permitted in the main dining room. &nbsp;·&nbsp; Improperly dressed members or guests will be asked to change.</p>
+      </div>
+    </div>
+
+    <footer>
+      <img class="fc" src="https://www.rivieracc.com/images/shield.png" alt=""
+           onerror="this.style.display='none';document.getElementById('fcfb').style.display='inline-block';" />
+      <span class="fc-fb" id="fcfb">RCC</span>
+      <span class="ftxt">Riviera Country Club <span>·</span> Coral Gables</span>
+      <span class="fright">rivieracc.com</span>
+    </footer>
+  </div>
+</body>
+</html>

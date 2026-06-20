@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Riviera Country Club — World Cup Center</title>
+<!--
+  WORLD CUP CENTER (Yodeck). Partidos de hoy + vivo: TheSportsDB (gratis), rotan de 3 en 3.
+  Tablas de los 12 grupos: API-Football via Cloudflare Worker (pega la URL en STANDINGS_URL).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#13315C; --navy-deep:#0E2547; --navy-line:#1C3E6E;
+    --gold:#C7A23C; --gold-soft:#E2C880; --maroon:#7E2A34; --green:#3F8F5B;
+    --ivory:#F3EFE5; --ivory-dim:#C3CCDA;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--navy);}
+  body{font-family:var(--sans);color:var(--ivory);font-size:1.05vw;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 90% at 82% -10%,#1a4079 0,rgba(26,64,121,0) 55%),
+      radial-gradient(140% 120% at -10% 120%,#102d57 0,rgba(16,45,87,0) 50%),var(--navy);}
+  .stage{width:100vw;height:100vh;display:grid;grid-template-rows:12vh 27vh 1fr 6.5vh;position:relative;}
+  .stage::before{content:"";position:absolute;inset:1.4vh 1.4vw;border:1px solid rgba(199,162,60,.28);pointer-events:none;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:0 4vw;position:relative;}
+  header::after{content:"";position:absolute;left:4vw;right:4vw;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(199,162,60,.6) 12%,rgba(199,162,60,.6) 88%,transparent);}
+  .brand{display:flex;align-items:center;gap:1.4vw;}
+  .crest{height:8vh;width:auto;filter:drop-shadow(0 .3vh .6vh rgba(0,0,0,.45));}
+  .crest-fb{height:8vh;width:6vh;border:1.5px solid var(--gold);border-radius:0 0 50% 50%/0 0 22% 22%;
+    display:none;align-items:center;justify-content:center;color:var(--gold);font-family:var(--serif);font-weight:700;font-size:2.2vh;}
+  .ttl .eyebrow{font-size:.8vw;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .ttl .main{font-family:var(--serif);font-weight:700;font-size:2.7vw;line-height:1;}
+  .hostline{display:flex;align-items:center;gap:.5vw;margin-top:.3vh;font-size:.78vw;letter-spacing:.16em;text-transform:uppercase;color:var(--ivory-dim);font-weight:600;}
+  .hostline .d{width:.55vw;height:.55vw;border-radius:50%;}
+  .clock{text-align:right;}
+  .clock .t{font-family:var(--serif);font-weight:500;font-size:2.6vw;line-height:1;}
+  .clock .dt{margin-top:.3vh;font-size:.8vw;letter-spacing:.2em;text-transform:uppercase;color:var(--ivory-dim);}
+
+  .sec-label{font-size:.85vw;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:700;display:flex;align-items:center;gap:1vw;}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--navy-line);}
+  .head-row{display:flex;align-items:center;justify-content:space-between;gap:1.4vw;}
+  .pgind{font-size:.8vw;letter-spacing:.16em;text-transform:uppercase;color:var(--ivory-dim);font-weight:600;white-space:nowrap;}
+
+  /* Today's matches */
+  .today{padding:2vh 4vw 1vh;display:flex;flex-direction:column;min-height:0;}
+  .m-row{margin-top:1.4vh;flex:1;display:flex;gap:1.4vw;align-items:stretch;}
+  .m{flex:1;background:rgba(255,255,255,.045);border:1px solid var(--navy-line);border-radius:.6vw;
+    padding:1.4vh 1.2vw;display:flex;flex-direction:column;justify-content:center;gap:.9vh;min-width:0;}
+  .m.live{border-color:var(--maroon);box-shadow:0 0 0 1px var(--maroon) inset;}
+  .m-status{font-size:.82vw;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;}
+  .m-status.live{color:#fff;background:var(--maroon);border-radius:1vw;padding:.3vh .9vw;align-self:center;}
+  .m-status.ft{color:var(--ivory-dim);}
+  .m-status.ns{color:var(--gold);}
+  .m-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.6vw;}
+  .m-teams .t{font-size:1.25vw;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-teams .t.h{text-align:right;} .m-teams .t.a{text-align:left;}
+  .m-teams .sc{font-family:var(--serif);font-weight:700;font-size:1.8vw;color:var(--gold-soft);white-space:nowrap;}
+  .m-venue{font-size:.88vw;color:var(--ivory-dim);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.2vw;color:var(--ivory-dim);font-style:italic;}
+
+  /* Standings */
+  .stand{padding:1.5vh 4vw 1vh;display:flex;flex-direction:column;min-height:0;}
+  .grid{margin-top:1.2vh;flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:1.2vh 1.8vw;transition:opacity .4s;}
+  .grid.fade{opacity:0;}
+  .gcard{background:rgba(255,255,255,.04);border:1px solid var(--navy-line);border-radius:.55vw;padding:.9vh 1.1vw;display:flex;flex-direction:column;min-height:0;}
+  .gname{font-family:var(--serif);font-weight:700;font-size:1.15vw;color:var(--gold-soft);margin-bottom:.4vh;}
+  .gtable{flex:1;display:flex;flex-direction:column;}
+  .grow{display:grid;grid-template-columns:1.2vw 1fr 1.7vw 2.2vw 2.2vw;align-items:center;gap:.4vw;font-size:.92vw;padding:.3vh 0;border-top:1px solid rgba(199,162,60,.1);}
+  .grow.hd{border-top:none;color:var(--gold);font-size:.66vw;letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+  .grow .rk{color:var(--ivory-dim);font-weight:700;text-align:center;}
+  .grow .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .grow .v{text-align:center;color:var(--ivory-dim);}
+  .grow .pt{text-align:center;font-weight:700;color:var(--ivory);font-family:var(--serif);}
+  .grow.adv{background:rgba(63,143,91,.10);}
+  .grow.adv .rk{color:var(--green);}
+  .grow.adv .nm{color:#EAF3ED;}
+  .st-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3vw;color:var(--ivory-dim);font-style:italic;text-align:center;padding:0 8vw;}
+
+  footer{background:var(--navy-deep);border-top:1px solid var(--navy-line);display:flex;align-items:center;justify-content:center;gap:1.1vw;}
+  footer .fc{height:4vh;}
+  footer .fc-fb{display:none;font-family:var(--serif);font-weight:700;color:var(--gold);font-size:1.6vh;border:1px solid var(--gold);border-radius:.3vh;padding:.3vh .6vh;}
+  footer .ftxt{font-size:.95vw;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);font-weight:700;}
+  footer .ftxt span{color:var(--gold);}
+  footer .live-note{margin-left:1.4vw;font-size:.82vw;color:var(--ivory-dim);letter-spacing:.05em;text-transform:none;}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <div class="brand">
+        <img class="crest" src="https://www.rivieracc.com/images/shield.png" alt="Riviera Country Club"
+             onerror="this.style.display='none';document.getElementById('crestFb').style.display='flex';" />
+        <div id="crestFb" class="crest-fb">RCC</div>
+        <div class="ttl">
+          <div class="eyebrow">Riviera Country Club</div>
+          <div class="main">FIFA World Cup 2026</div>
+          <div class="hostline">
+            <span class="d" style="background:#3C3B6E"></span><span class="d" style="background:#D52B1E"></span><span class="d" style="background:#006847"></span>
+            USA · Canada · México
+          </div>
+        </div>
+      </div>
+      <div class="clock">
+        <div class="t" id="tClock">--:--</div>
+        <div class="dt" id="tDate">———</div>
+      </div>
+    </header>
+
+    <section class="today">
+      <div class="head-row"><div class="sec-label" style="flex:1">Today&rsquo;s Matches</div><div class="pgind" id="mPage"></div></div>
+      <div class="m-row" id="mRow"><div class="m-empty">Loading today&rsquo;s matches…</div></div>
+    </section>
+
+    <section class="stand">
+      <div class="head-row"><div class="sec-label" style="flex:1">Group Standings</div><div class="pgind" id="stPage"></div></div>
+      <div class="grid" id="grid"><div class="st-empty">Loading standings…</div></div>
+    </section>
+
+    <footer>
+      <img class="fc" src="https://www.rivieracc.com/images/shield.png" alt=""
+           onerror="this.style.display='none';document.getElementById('fcfb').style.display='inline-block';" />
+      <span class="fc-fb" id="fcfb">RCC</span>
+      <span class="ftxt">Riviera Country Club <span>·</span> World Cup Center</span>
+      <span class="live-note">Scores &amp; tables update automatically</span>
+    </footer>
+  </div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const TZ='America/New_York';
+const SDB='https://www.thesportsdb.com/api/v1/json/3';
+const WC_MATCH='world cup';
+const AF_SEASON='2026';
+const AF_TTL=15*60*1000;
+
+/* >>> PEGA AQUI LA URL DE TU CLOUDFLARE WORKER (resuelve el CORS de API-Football) <<< */
+const STANDINGS_URL='https://wc-standings.TU-SUBDOMINIO.workers.dev';
+/* Fallback directo (suele fallar por CORS; el Worker es la via buena): */
+const AF_KEY='f5750a6698fafb6a55d87f82a970b62b';
+
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function todayISO(){return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date());}
+/* fetch con timeout (para que nunca se cuelgue) */
+async function fetchT(url,opts,ms){const c=new AbortController();const id=setTimeout(()=>c.abort(),ms||8000);
+  try{return await fetch(url,Object.assign({signal:c.signal},opts||{}));}finally{clearTimeout(id);}}
+
+/* Reloj */
+function tick(){
+  const now=new Date();
+  document.getElementById('tClock').textContent=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}).format(now);
+  document.getElementById('tDate').textContent=new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:TZ}).format(now);
+}
+tick(); setInterval(tick,20000);
+
+/* Hora de inicio -> zona Miami AM/PM (desde UTC) */
+function koLabel(ev){
+  let ts=ev.strTimestamp||'';
+  if(ts){ ts=ts.replace(' ','T'); if(!/[zZ]|[+\-]\d\d:?\d\d$/.test(ts)) ts+='Z'; }
+  else if(ev.dateEvent && ev.strTime){ ts=ev.dateEvent+'T'+ev.strTime.slice(0,8)+'Z'; }
+  if(!ts) return '';
+  const d=new Date(ts); if(isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}).format(d);
+}
+function state(ev){
+  const st=(ev.strStatus||'').toString().toLowerCase();
+  const hs=ev.intHomeScore;
+  if(/(finished|ft|aet|pen|after)/.test(st)) return {k:'ft',label:'Full Time'};
+  if(/(not started|ns)/.test(st) || hs===null || hs===undefined || hs===''){
+    const t=koLabel(ev); return {k:'ns',label:t?('Kick-off '+t):'Today'};
+  }
+  return {k:'live',label:(ev.strProgress&&ev.strProgress!=='0')?("Live "+ev.strProgress+"'"):'Live'};
+}
+
+/* ===================== PARTIDOS DE HOY (rotan de 3 en 3) ===================== */
+let MATCHES=[], mPage=0, mTimer=null;
+const M_PER_PAGE=3, M_PAGE_MS=10000;
+async function loadToday(){
+  try{
+    const r=await fetchT(`${SDB}/eventsday.php?d=${todayISO()}&s=Soccer`,{},8000);
+    const d=await r.json();
+    MATCHES=(d.events||[]).filter(e=>(e.strLeague||'').toLowerCase().includes(WC_MATCH));
+  }catch(e){ /* conserva lo anterior si falla */ }
+  const total=Math.ceil(Math.max(MATCHES.length,1)/M_PER_PAGE);
+  if(mPage>=total) mPage=0;
+  renderMatches(); startMatchPaging();
+}
+function renderMatches(){
+  const row=document.getElementById('mRow'), ind=document.getElementById('mPage');
+  if(!MATCHES.length){ row.innerHTML='<div class="m-empty">No World Cup matches today — check the standings below.</div>'; ind.textContent=''; return; }
+  const total=Math.ceil(MATCHES.length/M_PER_PAGE);
+  const slice=MATCHES.slice(mPage*M_PER_PAGE,mPage*M_PER_PAGE+M_PER_PAGE);
+  ind.textContent=total>1?`${mPage+1} / ${total}`:'';
+  row.innerHTML=slice.map(e=>{
+    const s=state(e);
+    const score=(e.intHomeScore!=null&&e.intHomeScore!==''&&e.intAwayScore!=null&&e.intAwayScore!=='')?`${e.intHomeScore} – ${e.intAwayScore}`:'vs';
+    const venue=[e.strVenue,e.strCity].filter(Boolean).join(' · ');
+    return `<div class="m ${s.k==='live'?'live':''}">
+      <div class="m-status ${s.k}">${esc(s.label)}</div>
+      <div class="m-teams"><span class="t h">${esc(e.strHomeTeam)}</span><span class="sc">${score}</span><span class="t a">${esc(e.strAwayTeam)}</span></div>
+      ${venue?`<div class="m-venue">${esc(venue)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function startMatchPaging(){
+  if(mTimer)clearInterval(mTimer);
+  const total=Math.ceil(MATCHES.length/M_PER_PAGE);
+  if(total<=1)return;
+  mTimer=setInterval(()=>{mPage=(mPage+1)%total;renderMatches();},M_PAGE_MS);
+}
+
+/* ===================== TABLAS (Cloudflare Worker o directo) ===================== */
+function cacheGet(k){try{const v=JSON.parse(localStorage.getItem(k));if(v&&(Date.now()-v.t)<AF_TTL)return v.d;}catch(e){}return null;}
+function cacheSet(k,d){try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}));}catch(e){}}
+async function fetchStandingsAF(){
+  const cached=cacheGet('wc_st'); if(cached) return cached;
+  let d=null;
+  if(STANDINGS_URL){ try{const r=await fetchT(STANDINGS_URL,{},9000); d=await r.json(); }catch(e){} }
+  if(!(d&&d.response)){ try{
+    const r=await fetchT(`https://v3.football.api-sports.io/standings?league=1&season=${AF_SEASON}`,{headers:{'x-apisports-key':AF_KEY}},9000);
+    d=await r.json();
+  }catch(e){} }
+  const st=d&&d.response&&d.response[0]&&d.response[0].league&&d.response[0].league.standings;
+  if(!st||!st.length) return null;
+  const out=st.map(g=>({name:(g[0]&&g[0].group)||'Group',
+    rows:g.map(t=>({team:(t.team&&t.team.name)||'',Pld:(t.all&&t.all.played)||0,GD:(t.goalsDiff!=null?t.goalsDiff:0),Pts:(t.points!=null?t.points:0)}))}));
+  cacheSet('wc_st',out); return out;
+}
+
+let STANDINGS=[], page=0, pageTimer=null;
+const PER_PAGE=6, PAGE_MS=12000;
+async function loadStandings(){
+  const st=await fetchStandingsAF();
+  const grid=document.getElementById('grid');
+  if(!st||!st.length){
+    grid.innerHTML='<div class="st-empty">Updating group standings…</div>';
+    document.getElementById('stPage').textContent=''; return;
+  }
+  STANDINGS=st; page=0; renderPage(); startPaging();
+}
+function renderPage(){
+  const grid=document.getElementById('grid');
+  const total=Math.ceil(STANDINGS.length/PER_PAGE);
+  const slice=STANDINGS.slice(page*PER_PAGE,page*PER_PAGE+PER_PAGE);
+  document.getElementById('stPage').textContent=total>1?`Groups ${page+1} / ${total}`:'';
+  grid.classList.add('fade');
+  setTimeout(()=>{
+    grid.innerHTML=slice.map(g=>{
+      const rows=g.rows.map((t,idx)=>{const gds=(t.GD>0?'+':'')+t.GD;
+        return `<div class="grow ${idx<2?'adv':''}"><span class="rk">${idx+1}</span><span class="nm">${esc(t.team)}</span><span class="v">${t.Pld}</span><span class="v">${gds}</span><span class="pt">${t.Pts}</span></div>`;}).join('');
+      return `<div class="gcard"><div class="gname">${esc(g.name)}</div><div class="gtable">
+        <div class="grow hd"><span class="rk">#</span><span class="nm">Team</span><span class="v">P</span><span class="v">GD</span><span class="pt">Pts</span></div>
+        ${rows}</div></div>`;
+    }).join('');
+    grid.classList.remove('fade');
+  },400);
+}
+function startPaging(){
+  if(pageTimer)clearInterval(pageTimer);
+  const total=Math.ceil(STANDINGS.length/PER_PAGE);
+  if(total<=1)return;
+  pageTimer=setInterval(()=>{page=(page+1)%total;renderPage();},PAGE_MS);
+}
+
+/* Cargas + refrescos */
+loadToday();      setInterval(loadToday,30*1000);
+loadStandings();  setInterval(loadStandings,15*60*1000);
+setTimeout(()=>location.reload(),6*60*60*1000);
+</script>
+</body>
+</html>

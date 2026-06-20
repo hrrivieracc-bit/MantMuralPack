@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Riviera Country Club — Service Standards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#13315C;--navy-2:#1C3E6E;--navy-deep:#0E2547;--gold:#C7A23C;--gold-deep:#B68F2E;--gold-soft:#E2C880;
+--maroon:#7E2A34;--card:#FFFFFF;--card-bd:#E5E1D6;--ink:#212934;--muted:#6E7682;--cream:#F3EFE5;--cream-dim:#C3CCDA;
+--serif:'Source Serif 4',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:var(--sans);color:var(--cream);font-size:1.05vw;background:var(--navy);-webkit-font-smoothing:antialiased;
+background-image:radial-gradient(120% 90% at 88% -10%,#1a4079 0%,rgba(26,64,121,0) 55%),radial-gradient(150% 120% at -10% 120%,#102d57 0%,rgba(16,45,87,0) 50%);}
+.stage{width:100vw;height:100vh;display:grid;grid-template-rows:18vh 1fr 7vh;position:relative;}
+.stage::before{content:"";position:absolute;inset:1.4vh 1.4vw;border:1px solid rgba(199,162,60,.30);pointer-events:none;}
+header{padding:0 4vw;display:flex;flex-direction:column;justify-content:center;position:relative;}
+header::after{content:"";position:absolute;left:4vw;right:4vw;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(199,162,60,.6) 12%,rgba(199,162,60,.6) 88%,transparent);}
+.eyebrow{font-size:.95vw;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+.title{font-family:var(--serif);font-weight:700;font-size:3.6vw;line-height:1;margin-top:.5vh;color:var(--cream);}
+.tagline{font-family:var(--serif);font-style:italic;font-size:1.6vw;color:var(--gold-soft);margin-top:.8vh;}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4vw;padding:3vh 4vw 1vh;align-items:stretch;}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(199,162,60,.3);border-radius:.7vw;padding:2.6vh 2vw;display:flex;flex-direction:column;}
+.cicon{width:7vh;height:7vh;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;margin-bottom:1.8vh;}
+.cicon svg{width:3.6vh;height:3.6vh;}
+.ch{font-family:var(--serif);font-weight:700;font-size:2.1vw;color:var(--cream);}
+.cl{list-style:none;margin-top:1.4vh;}
+.cl li{font-size:1.18vw;line-height:1.5;color:var(--cream-dim);padding-left:1.4vw;position:relative;margin-bottom:.9vh;}
+.cl li::before{content:"";position:absolute;left:.1vw;top:.7vh;width:.5vw;height:.5vw;border-radius:50%;background:var(--gold);}
+.cl li b{color:var(--gold-soft);font-weight:600;}
+footer{background:var(--navy-deep);border-top:1px solid rgba(199,162,60,.25);display:flex;align-items:center;justify-content:center;gap:1.1vw;}
+footer .fc{height:4vh;}footer .fc-fb{display:none;font-family:var(--serif);font-weight:700;color:var(--gold);font-size:1.6vh;border:1px solid var(--gold);border-radius:.3vh;padding:.3vh .6vh;}
+footer .ftxt{font-size:1vw;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft);font-weight:700;}footer .ftxt span{color:var(--gold);}
+</style></head><body>
+<div class="stage">
+<header>
+<div class="eyebrow">Service Guidelines</div>
+<div class="title">The Member-Pleasing Business</div>
+<div class="tagline">Excellent service is the name of our game.</div>
+</header>
+<div class="cards">
+<div class="card">
+<span class="cicon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 11c2-3 5-4 7-2l2 2 2-2c2-2 5-1 7 2-1 4-7 8-9 9-2-1-8-5-9-9z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+<div class="ch">Accommodate</div>
+<ul class="cl"><li>Address members by their <b>last name</b>.</li><li>Do everything in your power to make a member happy.</li><li>Can't help? <b>Find someone who can.</b></li></ul>
+</div>
+<div class="card">
+<span class="cicon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.6"/><path d="M8.5 14c1 1.6 6 1.6 7 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/></svg></span>
+<div class="ch">Attitude</div>
+<ul class="cl"><li>Be <b>friendly</b> and welcoming, in person and on the phone.</li><li>Never discuss personal problems with members.</li><li>Never complain about your job in front of a member.</li></ul>
+</div>
+<div class="card">
+<span class="cicon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.8L19 9l-4.5 1.8L12 16l-2.5-5.2L5 9l5.2-1.2z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+<div class="ch">Appearance</div>
+<ul class="cl"><li>Neat, clean uniform and good personal hygiene.</li><li>No gum, eating, drinking or smoking while working.</li><li>Look sharp — that pride reaches every member.</li></ul>
+</div>
+</div>
+<footer>
+<img class="fc" src="https://www.rivieracc.com/images/shield.png" alt="" onerror="this.style.display='none';document.getElementById('fcfb').style.display='inline-block';"/>
+<span class="fc-fb" id="fcfb">RCC</span>
+<span class="ftxt">Riviera Country Club <span>·</span> Winning Member Service</span>
+</footer>
+</div></body></html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Riviera Country Club — Careers</title>
+<!--
+  RIVIERA COUNTRY CLUB · SLIDE DE CAREERS  (calcado del slide 7 del bulletin)
+  Info real de rivieracc.com/Careers. El QR lleva a esa página.
+  Edita la sección OPEN POSITIONS si cambian las vacantes.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#13315C; --navy-2:#1C3E6E; --navy-deep:#0E2547;
+    --gold:#C7A23C; --gold-deep:#B68F2E; --gold-soft:#E2C880;
+    --maroon:#7E2A34; --paper:#F3F1EA; --card:#FFFFFF; --card-bd:#E5E1D6;
+    --ink:#212934; --muted:#6E7682; --cream:#F3EFE5; --cream-dim:#C3CCDA;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;}
+  body{ font-family:var(--sans); color:var(--cream); font-size:1.05vw; background:var(--navy);
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 90% at 88% -10%, #1a4079 0%, rgba(26,64,121,0) 55%),
+      radial-gradient(150% 120% at -10% 120%, #102d57 0%, rgba(16,45,87,0) 50%); }
+  .stage{ width:100vw; height:100vh; display:grid; grid-template-rows:16vh 1fr 7vh; position:relative; }
+  .stage::before{ content:""; position:absolute; inset:1.4vh 1.4vw; border:1px solid rgba(199,162,60,.30); pointer-events:none; }
+
+  header{ display:flex; align-items:center; gap:1.6vw; padding:0 4vw; position:relative; }
+  header::after{ content:""; position:absolute; left:4vw; right:4vw; bottom:0; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(199,162,60,.6) 12%,rgba(199,162,60,.6) 88%,transparent); }
+  .crest{ height:11vh; width:auto; filter:drop-shadow(0 .3vh .6vh rgba(0,0,0,.45)); }
+  .crest-fb{ height:11vh; width:8.5vh; border:1.5px solid var(--gold); border-radius:0 0 50% 50%/0 0 22% 22%;
+    display:none; align-items:center; justify-content:center; color:var(--gold); font-family:var(--serif); font-weight:700; font-size:3vh; }
+  .eyebrow{ font-size:.95vw; letter-spacing:.4em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .title{ font-family:var(--serif); font-weight:700; font-size:4.4vw; line-height:.95; margin-top:.3vh; color:var(--cream); }
+
+  main{ display:grid; grid-template-columns:1.55fr 1fr; gap:3.5vw; padding:3vh 4vw 1.6vh; }
+
+  .pitch .lead{ font-family:var(--serif); font-weight:600; font-size:2.5vw; line-height:1.12; color:var(--cream); }
+  .pitch .sub{ font-size:1.25vw; color:var(--cream-dim); margin-top:1.2vh; }
+  .perks{ display:flex; gap:1vw; margin-top:2vh; flex-wrap:wrap; }
+  .perk{ font-size:1vw; font-weight:600; color:var(--gold-soft); border:1px solid rgba(199,162,60,.5);
+    border-radius:2vw; padding:.8vh 1.4vw; background:rgba(199,162,60,.07); }
+
+  .jobs-label{ font-size:.92vw; letter-spacing:.34em; text-transform:uppercase; color:var(--gold); font-weight:700;
+    margin:2.6vh 0 1.3vh; display:flex; align-items:center; gap:1vw; }
+  .jobs-label::after{ content:""; flex:1; height:1px; background:rgba(199,162,60,.28); }
+  .jobs{ display:grid; grid-template-columns:1fr; gap:1.2vh; }
+  .job{ background:var(--card); border:1px solid var(--card-bd); border-radius:.55vw; padding:1.6vh 1.6vw;
+    display:flex; align-items:flex-start; gap:1.1vw; box-shadow:0 .2vh .7vh rgba(0,0,0,.18); }
+  .job .dot{ width:1vw; height:1vw; min-width:11px; border-radius:50%; background:var(--gold); margin-top:.8vh; flex:none; }
+  .job .jt{ font-family:var(--serif); font-size:1.95vw; font-weight:700; color:var(--ink); line-height:1.05; }
+  .job .jd{ font-size:1.08vw; color:var(--muted); margin-top:.4vh; }
+
+  .apply{ background:rgba(255,255,255,.05); border:1px solid rgba(199,162,60,.35); border-radius:.6vw;
+    padding:2.4vh 1.8vw; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .apply .scan{ font-size:1vw; letter-spacing:.26em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .apply .qr{ width:14vw; height:14vw; margin:2vh 0; border:.6vw solid var(--cream); border-radius:.5vw; background:var(--cream); }
+  .apply .how{ font-size:1.1vw; color:var(--cream); line-height:1.45; }
+  .apply .how b{ color:var(--gold-soft); font-weight:600; }
+  .apply .fine{ font-size:.95vw; color:var(--cream-dim); margin-top:1.2vh; }
+
+  footer{ background:var(--navy-deep); border-top:1px solid rgba(199,162,60,.25); display:flex; align-items:center; justify-content:center; gap:1.1vw; }
+  footer .fc{ height:4vh; }
+  footer .fc-fb{ display:none; font-family:var(--serif); font-weight:700; color:var(--gold); font-size:1.6vh; border:1px solid var(--gold); border-radius:.3vh; padding:.3vh .6vh; }
+  footer .ftxt{ font-size:1vw; letter-spacing:.22em; text-transform:uppercase; color:var(--gold-soft); font-weight:700; }
+  footer .ftxt span{ color:var(--gold); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <img class="crest" src="https://www.rivieracc.com/images/shield.png" alt="Riviera Country Club"
+           onerror="this.style.display='none';document.getElementById('crestFb').style.display='flex';" />
+      <div id="crestFb" class="crest-fb">RCC</div>
+      <div>
+        <div class="eyebrow">Join Our Team</div>
+        <div class="title">We&rsquo;re Hiring</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="pitch">
+        <div class="lead">Be a proud part of an exceptional professional team.</div>
+        <div class="sub">We&rsquo;re hiring friendly, professional, service-oriented staff.</div>
+        <div class="perks">
+          <span class="perk">Competitive pay</span>
+          <span class="perk">Parking included</span>
+          <span class="perk">Employee meal</span>
+        </div>
+
+        <!-- OPEN POSITIONS (edita aquí si cambian las vacantes) -->
+        <div class="jobs-label">Open Positions</div>
+        <div class="jobs">
+          <div class="job"><span class="dot"></span><div>
+            <div class="jt">Dining Room &amp; Banquet Servers</div>
+            <div class="jd">Full-Time &middot; experience in a hospitality / country club setting preferred.</div>
+          </div></div>
+          <div class="job"><span class="dot"></span><div>
+            <div class="jt">Assistant Servers &amp; Assistant Banquet Servers</div>
+            <div class="jd">Full-Time &middot; restaurant &amp; banquet set-up &middot; able to lift 50 lbs regularly.</div>
+          </div></div>
+        </div>
+      </section>
+
+      <aside class="apply">
+        <div class="scan">Scan to apply</div>
+        <img class="qr" src="data:image/png;base64,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mkfqpunSXzBdOuGRejWP1Inp0lbTpVczAQCwgAkAgAVMAAAsYAIAYAETAAALmAAAWMAEAMACJgAAFjABALDA29fnx7cOeKROTJd+O4/UienSE4/UienSCY/ULdMl4P/jkcK/TZdezSN1y3TpJo/UienSExMAAAuYAABYwAQAwAImAAAWMAEAsIAJAIAFTAAALGACAGABEwAAC7zrh3ikXm26tJVH6q/wSN0yXTrhkToxXbrFI7XVdOnEdOmER+qm6dKreaROeKS2mi498UidmC69mgkAgAVMAAAsYAIAYAETAAALmAAAWMAEAMACJgAAFjABALCACQCABd6FX2W6dItH6qbp0lbTpRMeqVebLp3wSJ2YLj3xSN00XXo1j9RN06UTHqkn06UTHqkT06UTHqkn06WtTAAALGACAGABEwAAC5gAAFjABADAAiYAABYwAQCwgAkAgAXehRWmSyc8UrdMl054pE54pF7NI3XTdOmER+rJdOmm6dIt06WbPFInpksnPFJPpks3eaRu8Ujd5JE6MV164pG6abp0iwkAgAVMAAAsYAIAYAETAAALmAAAWMAEAMACJgAAFjABALCACQCABd71Q6ZLf8F06abp0gmP1BOP1E+YLp3wSD2ZLt3kkToxXXrikbppunTCI/VkunTCI/UTpktbTZdezSN1wiP1ZLp0wiP1aiYAABYwAQCwgAkAgAVMAAAsYAIAYAETAAALmAAAWMAEAMACJgAAFnj7+vz41gGPFP5tuvTEI3ViunTCI3ViunSLR2qr6dJf4ZHaarp0k0fqlunSTR6pJ9OlEx6pm6ZLTzxSJ6ZLr2YCAGABEwAAC5gAAFjABADAAiYAABYwAQCwgAkAgAVMAAAsYAIAYIG3r8+PbwEA8MNMAAAsYAIAYAETAAALmAAAWMAEAMACJgAAFjABALCACQCABf4PIlm40yiXgeIAAAAASUVORK5CYII=" alt="Apply at rivieracc.com" />
+        <div class="how">Email your r&eacute;sum&eacute; to <b>HR</b> with the position title in the subject line.</div>
+        <div class="fine">No phone calls, please &middot; No walk-in applicants</div>
+      </aside>
+    </main>
+
+    <footer>
+      <img class="fc" src="https://www.rivieracc.com/images/shield.png" alt=""
+           onerror="this.style.display='none';document.getElementById('fcfb').style.display='inline-block';" />
+      <span class="fc-fb" id="fcfb">RCC</span>
+      <span class="ftxt">Riviera Country Club <span>·</span> Human Resources</span>
+    </footer>
+  </div>
+</body>
+</html>
