@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Riviera Country Club — World Cup Center</title>
 <!--
-  WORLD CUP CENTER (Yodeck). Partidos de hoy + vivo: TheSportsDB (gratis), rotan de 3 en 3.
-  Tablas de los 12 grupos: API-Football via Cloudflare Worker (pega la URL en STANDINGS_URL).
+  WORLD CUP CENTER (Yodeck). Partidos de hoy + vivo: TheSportsDB. Tablas de los 12 grupos: ESPN.
+  Todo gratis, sin clave y sin configuracion. Se actualiza solo.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -135,13 +135,12 @@
 const TZ='America/New_York';
 const SDB='https://www.thesportsdb.com/api/v1/json/3';
 const WC_MATCH='world cup';
-const AF_SEASON='2026';
-const AF_TTL=15*60*1000;
-
-/* >>> PEGA AQUI LA URL DE TU CLOUDFLARE WORKER (resuelve el CORS de API-Football) <<< */
-const STANDINGS_URL='https://wc-standings.TU-SUBDOMINIO.workers.dev';
-/* Fallback directo (suele fallar por CORS; el Worker es la via buena): */
-const AF_KEY='f5750a6698fafb6a55d87f82a970b62b';
+const STD_TTL=8*60*1000; // cachea las tablas 8 min (frescura sin saturar)
+/* Tablas de grupos: ESPN (gratis, sin clave, CORS abierto). No requiere configuracion. */
+const ESPN_STANDINGS=[
+  'https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings',
+  'https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings'
+];
 
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function todayISO(){return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ}).format(new Date());}
@@ -213,28 +212,32 @@ function startMatchPaging(){
   mTimer=setInterval(()=>{mPage=(mPage+1)%total;renderMatches();},M_PAGE_MS);
 }
 
-/* ===================== TABLAS (Cloudflare Worker o directo) ===================== */
-function cacheGet(k){try{const v=JSON.parse(localStorage.getItem(k));if(v&&(Date.now()-v.t)<AF_TTL)return v.d;}catch(e){}return null;}
+/* ===================== TABLAS (ESPN, gratis y sin clave) ===================== */
+function cacheGet(k){try{const v=JSON.parse(localStorage.getItem(k));if(v&&(Date.now()-v.t)<STD_TTL)return v.d;}catch(e){}return null;}
 function cacheSet(k,d){try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}));}catch(e){}}
-async function fetchStandingsAF(){
+function statVal(entry,name){const x=(entry.stats||[]).find(s=>s.name===name);if(!x)return 0;return (x.value!=null)?x.value:(parseFloat(x.displayValue||'0')||0);}
+function cleanGroup(n){if(!n)return 'Group';const m=/Group\s+[A-Z0-9]+/i.exec(n);return m?m[0]:n;}
+function collectGroups(node,out){
+  if(node&&node.children&&node.children.length){ for(const c of node.children) collectGroups(c,out); }
+  else if(node&&node.standings&&node.standings.entries&&node.standings.entries.length){ out.push({name:node.name,entries:node.standings.entries}); }
+}
+async function fetchStandings(){
   const cached=cacheGet('wc_st'); if(cached) return cached;
-  let d=null;
-  if(STANDINGS_URL){ try{const r=await fetchT(STANDINGS_URL,{},9000); d=await r.json(); }catch(e){} }
-  if(!(d&&d.response)){ try{
-    const r=await fetchT(`https://v3.football.api-sports.io/standings?league=1&season=${AF_SEASON}`,{headers:{'x-apisports-key':AF_KEY}},9000);
-    d=await r.json();
-  }catch(e){} }
-  const st=d&&d.response&&d.response[0]&&d.response[0].league&&d.response[0].league.standings;
-  if(!st||!st.length) return null;
-  const out=st.map(g=>({name:(g[0]&&g[0].group)||'Group',
-    rows:g.map(t=>({team:(t.team&&t.team.name)||'',Pld:(t.all&&t.all.played)||0,GD:(t.goalsDiff!=null?t.goalsDiff:0),Pts:(t.points!=null?t.points:0)}))}));
+  let data=null;
+  for(const url of ESPN_STANDINGS){ try{const r=await fetchT(url,{},9000); data=await r.json(); if(data) break; }catch(e){} }
+  if(!data) return null;
+  const groups=[]; collectGroups(data,groups);
+  if(!groups.length) return null;
+  const out=groups.map(g=>({name:cleanGroup(g.name),
+    rows:g.entries.map(e=>({team:(e.team&&(e.team.displayName||e.team.shortDisplayName||e.team.name))||'',
+      Pld:Math.round(statVal(e,'gamesPlayed')),GD:Math.round(statVal(e,'pointDifferential')),Pts:Math.round(statVal(e,'points'))}))}));
   cacheSet('wc_st',out); return out;
 }
 
 let STANDINGS=[], page=0, pageTimer=null;
 const PER_PAGE=6, PAGE_MS=12000;
 async function loadStandings(){
-  const st=await fetchStandingsAF();
+  const st=await fetchStandings();
   const grid=document.getElementById('grid');
   if(!st||!st.length){
     grid.innerHTML='<div class="st-empty">Updating group standings…</div>';
@@ -267,8 +270,8 @@ function startPaging(){
 }
 
 /* Cargas + refrescos */
-loadToday();      setInterval(loadToday,30*1000);
-loadStandings();  setInterval(loadStandings,15*60*1000);
+loadToday(); setInterval(loadToday,30*1000);
+loadStandings(); setInterval(loadStandings,15*60*1000);
 setTimeout(()=>location.reload(),6*60*60*1000);
 </script>
 </body>
