@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Riviera Country Club — World Cup Center (Knockout)</title>
+<!--
+  WORLD CUP CENTER 2.0 (Yodeck). FASE DE ELIMINACION CON BANDERAS.
+  ============================================================================
+  UN SOLO ARCHIVO, DOS VISTAS (se elige por la URL):
+    worldcup2.html               -> BRACKET completo (vista grande)
+    worldcup2.html?vista=ronda   -> SOLO la ronda actual, en grande
+  ============================================================================
+  >>> CUANDO AVANCE EL TORNEO, cambia SOLO esta linea de abajo <<<
+      'R32' = 16avos | 'R16' = octavos | 'QF' = cuartos | 'SF' = semis | 'F' = final
+  ============================================================================
+  Estructura del cruce (orden, fechas, W##) fija para el Mundial 2026.
+  Equipos / marcadores / quien avanza: en vivo desde ESPN (gratis, sin clave).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#13315C; --navy-deep:#0E2547; --navy-line:#1C3E6E;
+    --gold:#C7A23C; --gold-soft:#E2C880; --maroon:#7E2A34; --green:#3F8F5B;
+    --ivory:#F3EFE5; --ivory-dim:#C3CCDA;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--navy);}
+  body{font-family:var(--sans);color:var(--ivory);font-size:1.05vw;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 90% at 82% -10%,#1a4079 0,rgba(26,64,121,0) 55%),
+      radial-gradient(140% 120% at -10% 120%,#102d57 0,rgba(16,45,87,0) 50%),var(--navy);}
+  .stage{width:100vw;height:100vh;display:grid;grid-template-rows:9vh 1fr 3.2vh;position:relative;}
+  .stage::before{content:"";position:absolute;inset:1.2vh 1vw;border:1px solid rgba(199,162,60,.28);pointer-events:none;z-index:5;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:0 2.4vw;position:relative;}
+  header::after{content:"";position:absolute;left:2.4vw;right:2.4vw;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(199,162,60,.6) 12%,rgba(199,162,60,.6) 88%,transparent);}
+  .brand{display:flex;align-items:center;gap:1vw;}
+  .crest{height:6vh;width:auto;filter:drop-shadow(0 .3vh .6vh rgba(0,0,0,.45));}
+  .crest-fb{height:6vh;width:4.6vh;border:1.5px solid var(--gold);border-radius:0 0 50% 50%/0 0 22% 22%;
+    display:none;align-items:center;justify-content:center;color:var(--gold);font-family:var(--serif);font-weight:700;font-size:1.8vh;}
+  .ttl .eyebrow{font-size:.66vw;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .ttl .main{font-family:var(--serif);font-weight:700;font-size:1.9vw;line-height:1;}
+  .mid{font-size:.95vw;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-soft);font-weight:700;text-align:center;}
+  .mid .hosts{display:block;font-size:.62vw;letter-spacing:.2em;color:var(--ivory-dim);margin-top:.5vh;}
+  .clock{text-align:right;}
+  .clock .t{font-family:var(--serif);font-weight:500;font-size:1.9vw;line-height:1;}
+  .clock .dt{margin-top:.3vh;font-size:.68vw;letter-spacing:.2em;text-transform:uppercase;color:var(--ivory-dim);}
+
+  main{position:relative;min-height:0;}
+  .view{position:absolute;inset:0;}
+  .hidden{display:none !important;}
+
+  /* ===== Match card (compartida por bracket y ronda) ===== */
+  .bm{background:rgba(255,255,255,.05);border:1px solid var(--navy-line);border-radius:.4vw;overflow:hidden;position:relative;z-index:1;}
+  .bm-top{display:flex;justify-content:space-between;align-items:center;gap:.4vw;padding:.22vh .55vw;
+    font-size:.55vw;letter-spacing:.04em;color:var(--ivory-dim);background:rgba(0,0,0,.16);text-transform:uppercase;font-weight:600;}
+  .bm-right{color:var(--gold-soft);}
+  .bm-right.live{color:#fff;}
+  .bt{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.45vw;padding:.34vh .55vw;font-size:.82vw;line-height:1.12;}
+  .bt+.bt{border-top:1px solid rgba(199,162,60,.12);}
+  .bt-flag{width:1.45vw;height:.98vw;object-fit:cover;border-radius:1.5px;box-shadow:0 0 0 1px rgba(0,0,0,.3);flex:none;background:rgba(255,255,255,.06);}
+  .bt-flag.noflag{box-shadow:none;background:transparent;}
+  .bt-nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+  .bt-sc{font-family:var(--serif);font-weight:700;color:var(--gold-soft);min-width:1vw;text-align:center;}
+  .bt.win .bt-nm{color:#EAF3ED;} .bt.win .bt-sc{color:var(--green);}
+  .bt.lose{opacity:.62;}
+  .bt.tbd .bt-nm{color:var(--ivory-dim);font-style:italic;opacity:.75;}
+  .bm-foot{font-size:.52vw;text-transform:uppercase;letter-spacing:.08em;text-align:center;color:var(--ivory-dim);
+    padding:.16vh 0;background:rgba(0,0,0,.12);font-weight:600;}
+  .bm-foot.live{background:var(--maroon);color:#fff;font-weight:700;}
+  .bm.live{border-color:var(--maroon);box-shadow:0 0 0 1px var(--maroon) inset;}
+  .bm.final{border-color:var(--gold);box-shadow:0 0 0 1px rgba(199,162,60,.45) inset;background:rgba(199,162,60,.06);}
+
+  /* ===== Vista BRACKET ===== */
+  .br-stage{position:relative;height:100%;padding:1vh 1.4vw 0.4vh;}
+  .br-svg{position:absolute;inset:1vh 1.4vw 0.4vh;z-index:0;pointer-events:none;}
+  .br-cols{position:relative;z-index:1;display:flex;gap:.45vw;height:100%;align-items:stretch;}
+  .br-col{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .br-col.r-R32{flex:1.35;}
+  .br-col.s-C{flex:1.2;}
+  .br-head{font-size:.62vw;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700;text-align:center;
+    margin-bottom:.7vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .br-slots{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:.3vh;min-height:0;}
+  .br-slots.center{justify-content:center;}
+  .br-col.s-C .br-crown{text-align:center;font-size:.72vw;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.8vh;}
+  .br-col.s-C .bm{transform:scale(1.04);}
+
+  /* ===== Vista RONDA (solo la ronda actual, dividida izq/der como el bracket) ===== */
+  .round-stage{height:100%;display:flex;flex-direction:column;padding:1.2vh 2.4vw;}
+  .round-split{flex:1;display:flex;align-items:stretch;gap:1.2vw;min-height:0;}
+  .rs-side{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:.72vh;min-width:0;}
+  .rs-center{flex:0 0 23vw;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1vh;padding:0 1vw;}
+  .rs-crest{height:15vh;width:auto;filter:drop-shadow(0 .4vh .8vh rgba(0,0,0,.5));}
+  .rs-crest-fb{display:none;font-family:var(--serif);font-weight:700;color:var(--gold);font-size:6vh;border:2px solid var(--gold);border-radius:0 0 50% 50%/0 0 20% 20%;padding:1vh 2vh;}
+  .rs-cup{font-size:1.1vw;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .rs-round{font-family:var(--serif);font-size:2.7vw;font-weight:700;color:var(--gold-soft);line-height:1.02;}
+  .rs-hosts{font-size:.8vw;letter-spacing:.24em;text-transform:uppercase;color:var(--ivory-dim);font-weight:600;}
+  .rs-divider{width:62%;height:1px;background:linear-gradient(90deg,transparent,rgba(199,162,60,.55),transparent);margin:.3vh 0;}
+  /* tarjetas grandes */
+  .round-split .bm{border-radius:.5vw;}
+  .round-split .bm-top{font-size:.66vw;padding:.26vh .85vw;}
+  .round-split .bt{font-size:1.02vw;padding:.4vh .85vw;gap:.65vw;}
+  .round-split .bt-flag{width:1.8vw;height:1.21vw;border-radius:2px;}
+  .round-split .bt-sc{font-size:1.2vw;min-width:1.2vw;}
+  .round-split .bm-foot{font-size:.6vw;padding:.2vh 0;}
+  /* mientras menos partidos por lado, mas grandes */
+  .round-split.per-4 .bt{font-size:1.6vw;} .round-split.per-4 .bt-flag{width:2.8vw;height:1.9vw;} .round-split.per-4 .bt-sc{font-size:1.85vw;} .round-split.per-4 .bm-top{font-size:.92vw;}
+  .round-split.per-2 .bt{font-size:2vw;} .round-split.per-2 .bt-flag{width:3.4vw;height:2.3vw;} .round-split.per-2 .bt-sc{font-size:2.25vw;} .round-split.per-2 .bm-top{font-size:1.05vw;}
+  .round-split.per-1 .bt{font-size:2.25vw;} .round-split.per-1 .bt-flag{width:3.8vw;height:2.55vw;} .round-split.per-1 .bt-sc{font-size:2.5vw;} .round-split.per-1 .bm-top{font-size:1.15vw;}
+  /* solo final: tarjeta central grande */
+  .round-split.final-only{flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;}
+  .round-split.final-only .rs-center{flex:0 0 auto;}
+  .rs-final{width:40vw;}
+  .rs-final .bm-top{font-size:1.25vw;padding:.7vh 1.2vw;}
+  .rs-final .bt{font-size:2.5vw;padding:1.05vh 1.2vw;gap:1vw;}
+  .rs-final .bt-flag{width:4.3vw;height:2.9vw;}
+  .rs-final .bt-sc{font-size:2.8vw;}
+  .rs-final .bm-foot{font-size:.95vw;padding:.5vh 0;}
+  .round-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.4vw;color:var(--ivory-dim);font-style:italic;text-align:center;padding:0 8vw;}
+
+  footer{background:var(--navy-deep);border-top:1px solid var(--navy-line);display:flex;align-items:center;justify-content:center;gap:1vw;}
+  footer .fc{height:2.2vh;}
+  footer .fc-fb{display:none;font-family:var(--serif);font-weight:700;color:var(--gold);font-size:1.3vh;border:1px solid var(--gold);border-radius:.3vh;padding:.2vh .5vh;}
+  footer .ftxt{font-size:.78vw;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);font-weight:700;}
+  footer .ftxt span{color:var(--gold);}
+  footer .live-note{margin-left:1vw;font-size:.7vw;color:var(--ivory-dim);letter-spacing:.05em;text-transform:none;}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <div class="brand">
+        <img class="crest" src="https://www.rivieracc.com/images/shield.png" alt="Riviera Country Club"
+             onerror="this.style.display='none';document.getElementById('crestFb').style.display='flex';" />
+        <div id="crestFb" class="crest-fb">RCC</div>
+        <div class="ttl">
+          <div class="eyebrow">Riviera Country Club</div>
+          <div class="main">FIFA World Cup 2026</div>
+        </div>
+      </div>
+      <div class="mid" id="viewTitle">Knockout Bracket<span class="hosts">USA · Canada · México</span></div>
+      <div class="clock">
+        <div class="t" id="tClock">--:--</div>
+        <div class="dt" id="tDate">———</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- VISTA 1: BRACKET COMPLETO -->
+      <section class="view" id="brWrap">
+        <div class="br-stage">
+          <svg class="br-svg" id="brSvg" preserveAspectRatio="none"></svg>
+          <div class="br-cols" id="brCols"></div>
+        </div>
+      </section>
+      <!-- VISTA 2: SOLO RONDA ACTUAL -->
+      <section class="view hidden" id="roundWrap">
+        <div class="round-stage">
+          <div id="roundBox"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <img class="fc" src="https://www.rivieracc.com/images/shield.png" alt=""
+           onerror="this.style.display='none';document.getElementById('fcfb').style.display='inline-block';" />
+      <span class="fc-fb" id="fcfb">RCC</span>
+      <span class="ftxt">Riviera Country Club <span>·</span> World Cup Center</span>
+      <span class="live-note">Bracket updates automatically</span>
+    </footer>
+  </div>
+
+<script>
+/* ============================================================
+   >>>>>>  RONDA ACTUAL — cambia SOLO esto cuando avance  <<<<<<
+   'R32'=16avos | 'R16'=octavos | 'QF'=cuartos | 'SF'=semis | 'F'=final
+   ============================================================ */
+const RONDA_ACTUAL = 'R32';
+/* ============================================================ */
+
+const TZ='America/New_York';
+const VIEW = (new URLSearchParams(location.search).get('vista')==='ronda') ? 'ronda' : 'bracket';
+const ESPN_SB='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- Reloj ---------- */
+function tick(){
+  const now=new Date();
+  document.getElementById('tClock').textContent=new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:TZ}).format(now);
+  document.getElementById('tDate').textContent=new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:TZ}).format(now);
+}
+tick(); setInterval(tick,20000);
+
+/* ---------- Banderas (flagcdn) + normalizacion de nombres ---------- */
+const ISO={germany:'de',paraguay:'py',france:'fr',sweden:'se',southafrica:'za',canada:'ca',netherlands:'nl',morocco:'ma',
+  portugal:'pt',croatia:'hr',spain:'es',austria:'at',usa:'us',bosniaandherzegovina:'ba',belgium:'be',senegal:'sn',
+  brazil:'br',japan:'jp',ivorycoast:'ci',norway:'no',mexico:'mx',ecuador:'ec',england:'gb-eng',congodr:'cd',
+  argentina:'ar',capeverde:'cv',australia:'au',egypt:'eg',switzerland:'ch',algeria:'dz',colombia:'co',ghana:'gh'};
+const ALIAS={cotedivoire:'ivorycoast',drcongo:'congodr',democraticrepublicofthecongo:'congodr',
+  unitedstates:'usa',unitedstatesofamerica:'usa',caboverde:'capeverde',bosniaherzegovina:'bosniaandherzegovina',
+  republicofireland:'ireland',korearepublic:'southkorea',southkorea:'southkorea'};
+function canon(s){s=(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');return ALIAS[s]||s;}
+function flagUrl(name){const iso=ISO[canon(name)];return iso?('https://flagcdn.com/w80/'+iso+'.png'):'';}
+
+/* ---------- Estructura fija del cruce (Mundial 2026) ---------- */
+/* numeros oficiales de partido: R32=73-88, R16=89-96, QF=97-100, SF=101-102, Final=104 */
+const MATCHES={
+  /* R32 izquierda (orden de arriba hacia abajo) */
+  74:{round:'R32',a:'Germany',b:'Paraguay',date:'Jun 29',time:'4:30 PM'},
+  77:{round:'R32',a:'France',b:'Sweden',date:'Jun 30',time:'5:00 PM'},
+  73:{round:'R32',a:'South Africa',b:'Canada',date:'Jun 28',time:'1:00 PM'},
+  75:{round:'R32',a:'Netherlands',b:'Morocco',date:'Jun 29',time:'9:00 PM'},
+  83:{round:'R32',a:'Portugal',b:'Croatia',date:'Jul 2',time:'7:00 PM'},
+  84:{round:'R32',a:'Spain',b:'Austria',date:'Jul 2',time:'3:00 PM'},
+  81:{round:'R32',a:'USA',b:'Bosnia and Herzegovina',date:'Jul 1',time:'8:00 PM'},
+  82:{round:'R32',a:'Belgium',b:'Senegal',date:'Jul 1',time:'4:00 PM'},
+  /* R32 derecha */
+  76:{round:'R32',a:'Brazil',b:'Japan',date:'Jun 29',time:'1:00 PM'},
+  78:{round:'R32',a:'Ivory Coast',b:'Norway',date:'Jun 30',time:'1:00 PM'},
+  79:{round:'R32',a:'Mexico',b:'Ecuador',date:'Jun 30',time:'9:00 PM'},
+  80:{round:'R32',a:'England',b:'Congo DR',date:'Jul 1',time:'12:00 PM'},
+  86:{round:'R32',a:'Argentina',b:'Cape Verde',date:'Jul 3',time:'6:00 PM'},
+  88:{round:'R32',a:'Australia',b:'Egypt',date:'Jul 3',time:'2:00 PM'},
+  85:{round:'R32',a:'Switzerland',b:'Algeria',date:'Jul 2',time:'11:00 PM'},
+  87:{round:'R32',a:'Colombia',b:'Ghana',date:'Jul 3',time:'9:30 PM'},
+  /* R16 */
+  89:{round:'R16',a:null,b:null,date:'Jul 4',time:'5:00 PM'},
+  90:{round:'R16',a:null,b:null,date:'Jul 4',time:'1:00 PM'},
+  93:{round:'R16',a:null,b:null,date:'Jul 6',time:'3:00 PM'},
+  94:{round:'R16',a:null,b:null,date:'Jul 6',time:'8:00 PM'},
+  91:{round:'R16',a:null,b:null,date:'Jul 5',time:'4:00 PM'},
+  92:{round:'R16',a:null,b:null,date:'Jul 5',time:'8:00 PM'},
+  95:{round:'R16',a:null,b:null,date:'Jul 7',time:'12:00 PM'},
+  96:{round:'R16',a:null,b:null,date:'Jul 7',time:'4:00 PM'},
+  /* QF */
+  97:{round:'QF',a:null,b:null,date:'Jul 9',time:'4:00 PM'},
+  98:{round:'QF',a:null,b:null,date:'Jul 10',time:'3:00 PM'},
+  99:{round:'QF',a:null,b:null,date:'Jul 11',time:'5:00 PM'},
+  100:{round:'QF',a:null,b:null,date:'Jul 11',time:'9:00 PM'},
+  /* SF */
+  101:{round:'SF',a:null,b:null,date:'Jul 14',time:'3:00 PM'},
+  102:{round:'SF',a:null,b:null,date:'Jul 15',time:'3:00 PM'},
+  /* Final */
+  104:{round:'F',a:null,b:null,date:'Jul 19',time:'3:00 PM'}
+};
+/* quien alimenta cada cruce: target -> [partido que da el equipo A, el que da el B] */
+const FEEDS={89:[74,77],90:[73,75],93:[83,84],94:[81,82],91:[76,78],92:[79,80],95:[86,88],96:[85,87],
+  97:[89,90],98:[93,94],99:[91,92],100:[95,96],101:[97,98],102:[99,100],104:[101,102]};
+const FEEDS_INTO={}; Object.keys(FEEDS).forEach(t=>{const f=FEEDS[t];FEEDS_INTO[f[0]]={t:+t,slot:'a'};FEEDS_INTO[f[1]]={t:+t,slot:'b'};});
+/* columnas de la vista bracket (izq -> centro -> der), orden vertical exacto de la imagen */
+const COLS=[
+  {round:'R32',side:'L',nums:[74,77,73,75,83,84,81,82]},
+  {round:'R16',side:'L',nums:[89,90,93,94]},
+  {round:'QF', side:'L',nums:[97,98]},
+  {round:'SF', side:'L',nums:[101]},
+  {round:'F',  side:'C',nums:[104]},
+  {round:'SF', side:'R',nums:[102]},
+  {round:'QF', side:'R',nums:[99,100]},
+  {round:'R16',side:'R',nums:[91,92,95,96]},
+  {round:'R32',side:'R',nums:[76,78,79,80,86,88,85,87]}
+];
+const ROUND_NAME={R32:'Round of 32',R16:'Round of 16',QF:'Quarterfinal',SF:'Semifinal',F:'Final'};
+
+/* ---------- Resultados en vivo (ESPN) ---------- */
+let RESULT={};
+function pairKey(a,b){return [canon(a),canon(b)].sort().join('|');}
+async function loadLive(){
+  const ranges=[['20260628','20260703'],['20260704','20260708'],['20260709','20260712'],['20260714','20260716'],['20260718','20260719']];
+  let evs=[];
+  try{
+    const res=await Promise.all(ranges.map(r=>
+      fetch(`${ESPN_SB}?dates=${r[0]}-${r[1]}&limit=100&_=${Date.now()}`).then(x=>x.json()).catch(()=>null)));
+    res.forEach(d=>{ if(d&&d.events) evs=evs.concat(d.events); });
+  }catch(e){}
+  const seen={},map={};
+  evs.forEach(ev=>{
+    if(!ev||!ev.id||seen[ev.id])return; seen[ev.id]=1;
+    const comp=(ev.competitions&&ev.competitions[0])||{}; const cs=comp.competitors||[];
+    const H=cs.find(x=>x.homeAway==='home')||cs[0]||{}, A=cs.find(x=>x.homeAway==='away')||cs[1]||{};
+    const hn=(H.team&&(H.team.displayName||H.team.shortDisplayName||H.team.name))||'';
+    const an=(A.team&&(A.team.displayName||A.team.shortDisplayName||A.team.name))||'';
+    if(!hn||!an)return;
+    const t=(comp.status&&comp.status.type)||{}; let state='pre';
+    if(t.state==='in')state='in'; else if(t.state==='post'||t.completed)state='post';
+    const cl=(comp.status&&comp.status.displayClock)||'';
+    const byTeam={}; byTeam[canon(hn)]=(H.score!=null?H.score:''); byTeam[canon(an)]=(A.score!=null?A.score:'');
+    let winner=null; if(H.winner)winner=canon(hn); else if(A.winner)winner=canon(an);
+    map[pairKey(hn,an)]={state:state,clock:(cl&&cl!=="0'")?cl:'',byTeam:byTeam,winner:winner};
+  });
+  RESULT=map;
+  try{ console.log('[WorldCup2.0/ESPN] knockout en vivo -> '+Object.keys(map).length+' partido(s) | vista: '+VIEW+' | ronda: '+RONDA_ACTUAL); }catch(e){}
+  propagate();
+  render();
+}
+/* propaga ganadores: rellena R16+ con quien gano (segun ESPN) */
+function propagate(){
+  Object.keys(MATCHES).forEach(n=>{ if(MATCHES[n].round!=='R32'){ MATCHES[n].a=null; MATCHES[n].b=null; } });
+  ['R32','R16','QF','SF','F'].forEach(rd=>{
+    Object.keys(MATCHES).forEach(n=>{
+      const m=MATCHES[n]; if(m.round!==rd) return;
+      if(m.a==null||m.b==null) return;
+      const r=RESULT[pairKey(m.a,m.b)];
+      if(r&&r.state==='post'&&r.winner){
+        const w = r.winner===canon(m.a)?m.a:(r.winner===canon(m.b)?m.b:null);
+        const fi=FEEDS_INTO[n];
+        if(w&&fi){ MATCHES[fi.t][fi.slot]=w; }
+      }
+    });
+  });
+}
+
+/* ---------- Render de una tarjeta ---------- */
+function teamRow(name,score,win,lose,tbd){
+  const flag = (!tbd && flagUrl(name))
+    ? `<img class="bt-flag" src="${flagUrl(name)}" alt="" onerror="this.classList.add('noflag');this.removeAttribute('src');">`
+    : `<span class="bt-flag noflag"></span>`;
+  const sc = (score===''||score==null) ? '' : `<span class="bt-sc">${esc(String(score))}</span>`;
+  return `<div class="bt ${win?'win':''} ${lose?'lose':''} ${tbd?'tbd':''}">${flag}<span class="bt-nm">${esc(name)}</span>${sc}</div>`;
+}
+function matchCard(n){
+  const m=MATCHES[n], fe=FEEDS[n];
+  let aN=m.a,bN=m.b,aT=false,bT=false;
+  if(!aN){ aN=fe?('W'+fe[0]):'TBD'; aT=true; }
+  if(!bN){ bN=fe?('W'+fe[1]):'TBD'; bT=true; }
+  let state='pre',scA='',scB='',clock='',win='';
+  if(!aT&&!bT){
+    const r=RESULT[pairKey(m.a,m.b)];
+    if(r){ state=r.state; scA=r.byTeam[canon(m.a)]; scB=r.byTeam[canon(m.b)]; clock=r.clock;
+      if(r.winner) win = (r.winner===canon(m.a))?'a':((r.winner===canon(m.b))?'b':''); }
+  }
+  const aWin=win==='a',bWin=win==='b';
+  const aLose=state==='post'&&win==='b', bLose=state==='post'&&win==='a';
+  let right=m.time||'';
+  if(state==='post') right=(scA!==''&&scB!==''&&String(scA)===String(scB))?'FT · pens':'FT';
+  else if(state==='in') right=clock||'LIVE';
+  const foot = state==='in'?'Live':(state==='post'?'':'Upcoming');
+  return `<div class="bm ${state==='in'?'live':''} ${n===104?'final':''}" data-n="${n}">
+    <div class="bm-top"><span class="bm-date">${esc(m.date||'')}</span><span class="bm-right ${state==='in'?'live':''}">${esc(right)}</span></div>
+    ${teamRow(aN,scA,aWin,aLose,aT)}
+    ${teamRow(bN,scB,bWin,bLose,bT)}
+    ${foot?`<div class="bm-foot ${state==='in'?'live':''}">${foot}</div>`:''}
+  </div>`;
+}
+
+/* ---------- Render BRACKET ---------- */
+function renderBracket(){
+  const host=document.getElementById('brCols');
+  host.innerHTML = COLS.map(col=>{
+    const cells=col.nums.map(matchCard).join('');
+    const crown = col.side==='C' ? '<div class="br-crown">🏆 Champion</div>' : '';
+    return `<div class="br-col r-${col.round} s-${col.side}">
+      <div class="br-head">${esc(ROUND_NAME[col.round])}</div>
+      ${crown}
+      <div class="br-slots ${col.side==='C'?'center':''}">${cells}</div>
+    </div>`;
+  }).join('');
+  requestAnimationFrame(()=>{ drawConnectors(); setTimeout(drawConnectors,350); setTimeout(drawConnectors,900); });
+}
+function drawConnectors(){
+  const svg=document.getElementById('brSvg'), cont=document.getElementById('brCols');
+  if(!svg||!cont) return;
+  const cb=cont.getBoundingClientRect();
+  if(!cb.width||!cb.height) return;
+  svg.setAttribute('viewBox',`0 0 ${cb.width} ${cb.height}`);
+  let d='';
+  Object.keys(FEEDS).forEach(tgt=>{
+    const tEl=cont.querySelector(`[data-n="${tgt}"]`); if(!tEl) return;
+    const tr=tEl.getBoundingClientRect();
+    const tcx=tr.left+tr.width/2-cb.left, tcy=tr.top+tr.height/2-cb.top;
+    FEEDS[tgt].forEach(f=>{
+      const fEl=cont.querySelector(`[data-n="${f}"]`); if(!fEl) return;
+      const fr=fEl.getBoundingClientRect();
+      const fcx=fr.left+fr.width/2-cb.left, fcy=fr.top+fr.height/2-cb.top;
+      let fx,tx;
+      if(fcx<tcx){ fx=fr.right-cb.left; tx=tr.left-cb.left; }   // alimentador a la izquierda
+      else        { fx=fr.left-cb.left;  tx=tr.right-cb.left; } // alimentador a la derecha
+      const midX=(fx+tx)/2;
+      d+=`<path d="M ${fx.toFixed(1)} ${fcy.toFixed(1)} H ${midX.toFixed(1)} V ${tcy.toFixed(1)} H ${tx.toFixed(1)}" `
+        +`fill="none" stroke="rgba(199,162,60,.40)" stroke-width="1.5"/>`;
+    });
+  });
+  svg.innerHTML=d;
+}
+
+/* ---------- Render RONDA actual (dividida izq/der, sin huecos del medio) ---------- */
+function renderRound(){
+  const box=document.getElementById('roundBox');
+  const left=[],right=[],center=[];
+  COLS.forEach(c=>{ if(c.round===RONDA_ACTUAL){
+    if(c.side==='L') left.push.apply(left,c.nums);
+    else if(c.side==='R') right.push.apply(right,c.nums);
+    else center.push.apply(center,c.nums);
+  }});
+  if(!left.length && !right.length && !center.length){ box.className=''; box.innerHTML='<div class="round-empty">This round has not been set yet.</div>'; return; }
+  const cp = '<img class="rs-crest" src="https://www.rivieracc.com/images/shield.png" alt="" '
+      + 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\';">'
+    + '<div class="rs-crest-fb">RCC</div>'
+    + '<div class="rs-cup">FIFA World Cup 2026</div>'
+    + '<div class="rs-divider"></div>'
+    + '<div class="rs-round">'+esc(ROUND_NAME[RONDA_ACTUAL]||'')+'</div>'
+    + '<div class="rs-hosts">USA · Canada · México</div>';
+  // Caso final: un solo partido al centro
+  if(center.length && !left.length && !right.length){
+    box.className='round-split final-only';
+    box.innerHTML='<div class="rs-center">'+cp+'</div><div class="rs-final">'+center.map(matchCard).join('')+'</div>';
+    return;
+  }
+  const per=Math.max(left.length,right.length);
+  box.className='round-split per-'+per;
+  box.innerHTML='<div class="rs-side rs-left">'+left.map(matchCard).join('')+'</div>'
+    +'<div class="rs-center">'+cp+'</div>'
+    +'<div class="rs-side rs-right">'+right.map(matchCard).join('')+'</div>';
+}
+
+/* ---------- Render segun la vista ---------- */
+function render(){
+  if(VIEW==='ronda'){
+    document.getElementById('brWrap').classList.add('hidden');
+    document.getElementById('roundWrap').classList.remove('hidden');
+    document.getElementById('viewTitle').innerHTML = esc(ROUND_NAME[RONDA_ACTUAL]||'Knockout')+'<span class="hosts">USA · Canada · México</span>';
+    renderRound();
+  }else{
+    document.getElementById('roundWrap').classList.add('hidden');
+    document.getElementById('brWrap').classList.remove('hidden');
+    renderBracket();
+  }
+}
+
+/* primera pintura inmediata (con estructura, antes de que llegue ESPN) */
+propagate(); render();
+/* datos en vivo + refrescos */
+loadLive(); setInterval(loadLive,3*60*1000);
+window.addEventListener('resize',()=>{ if(VIEW!=='ronda') drawConnectors(); });
+/* auto-reload cada 6 h (estabilidad 24/7) */
+setTimeout(()=>location.reload(),6*60*60*1000);
+</script>
+</body>
+</html>
