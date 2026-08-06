@@ -212,7 +212,14 @@ function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
    Pon aqui las URLs de tus fotos (p.ej. subidas a tu GitHub Pages MantMuralPack):
    const CLUB_PHOTOS=['https://hrrivieracc-bit.github.io/MantMuralPack/fotos/club1.jpg', ...];
    Vacio = se muestra la tarjeta de marca del club. */
-const CLUB_PHOTOS=[];
+const CLUB_PHOTOS=['https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/RivieraCC.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/front.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/golffield.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/golfview.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/playground.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/rivcc ge2.jpg',
+                   'https://raw.githubusercontent.com/hrrivieracc-bit/MantMuralPack/main/terrace.jpg',
+                  ];
 const PHOTO_MS=8000;
 (function(){
   const box=document.getElementById('clubPhotos');
